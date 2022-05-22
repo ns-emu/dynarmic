@@ -8,7 +8,7 @@
 
 #include <map>
 
-#include "common/common_types.h"
+#include <mcl/stdint.hpp>
 
 namespace Dynarmic::BackendA64 {
 

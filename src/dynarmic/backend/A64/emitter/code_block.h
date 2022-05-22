@@ -13,8 +13,8 @@
 #include <sys/mman.h>
 #endif
 
-#include "common/assert.h"
-#include "common/common_types.h"
+#include <mcl/assert.hpp>
+#include <mcl/stdint.hpp>
 
 namespace Dynarmic::BackendA64 {
 // Everything that needs to generate code should inherit from this.

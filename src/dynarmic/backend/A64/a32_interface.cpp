@@ -8,6 +8,9 @@
 
 #include <boost/icl/interval_set.hpp>
 #include <fmt/format.h>
+#include <mcl/assert.hpp>
+#include <mcl/stdint.hpp>
+#include <mcl/scope_exit.hpp>
 
 #include <dynarmic/A32/a32.h>
 #include <dynarmic/A32/context.h>
@@ -18,10 +21,7 @@
 #include "backend/A64/callback.h"
 #include "backend/A64/devirtualize.h"
 #include "backend/A64/jitstate_info.h"
-#include "common/assert.h"
-#include "common/common_types.h"
 #include "common/llvm_disassemble.h"
-#include "common/scope_exit.h"
 #include "frontend/A32/translate/translate.h"
 #include "frontend/ir/basic_block.h"
 #include "frontend/ir/location_descriptor.h"

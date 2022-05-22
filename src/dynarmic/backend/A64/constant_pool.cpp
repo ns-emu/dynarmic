@@ -6,9 +6,10 @@
 
 #include <cstring>
 
+#include <mcl/assert.hpp>
+
 #include "backend/A64/block_of_code.h"
 #include "backend/A64/constant_pool.h"
-#include "common/assert.h"
 
 namespace Dynarmic::BackendA64 {
 

@@ -9,10 +9,10 @@
 #include <utility>
 
 #include <fmt/ostream.h>
+#include <mcl/assert.hpp>
 
 #include "backend/A64/abi.h"
 #include "backend/A64/reg_alloc.h"
-#include "common/assert.h"
 
 namespace Dynarmic::BackendA64 {
 

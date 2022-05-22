@@ -7,14 +7,15 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include <mcl/assert.hpp>
+#include <mcl/bit/bit_field.hpp>
+#include <mcl/stdint.hpp>
+#include <mcl/scope_exit.hpp>
+
 #include "backend/A64/block_of_code.h"
 #include "backend/A64/emit_a64.h"
 #include "backend/A64/hostloc.h"
 #include "backend/A64/perf_map.h"
-#include "common/assert.h"
-#include "common/bit_util.h"
-#include "common/common_types.h"
-#include "common/scope_exit.h"
 #include "common/variant_util.h"
 #include "frontend/ir/basic_block.h"
 #include "frontend/ir/microinstruction.h"
@@ -129,10 +130,10 @@ void EmitA64::EmitNZCVFromPackedFlags(EmitContext& ctx, IR::Inst* inst) {
     if (args[0].IsImmediate()) {
         Arm64Gen::ARM64Reg nzcv = DecodeReg(ctx.reg_alloc.ScratchGpr());
         u32 value = 0;
-        value |= Common::Bit<31>(args[0].GetImmediateU32()) ? (1 << 15) : 0;
-        value |= Common::Bit<30>(args[0].GetImmediateU32()) ? (1 << 14) : 0;
-        value |= Common::Bit<29>(args[0].GetImmediateU32()) ? (1 << 8) : 0;
-        value |= Common::Bit<28>(args[0].GetImmediateU32()) ? (1 << 0) : 0;
+        value |= mcl::bit::get_bit<31>(args[0].GetImmediateU32()) ? (1 << 15) : 0;
+        value |= mcl::bit::get_bit<30>(args[0].GetImmediateU32()) ? (1 << 14) : 0;
+        value |= mcl::bit::get_bit<29>(args[0].GetImmediateU32()) ? (1 << 8) : 0;
+        value |= mcl::bit::get_bit<28>(args[0].GetImmediateU32()) ? (1 << 0) : 0;
         code.MOVI2R(nzcv, value);
         ctx.reg_alloc.DefineValue(inst, nzcv);
     } else {

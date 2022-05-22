@@ -11,6 +11,10 @@
 
 #include <fmt/format.h>
 #include <fmt/ostream.h>
+#include <mcl/assert.hpp>
+#include <mcl/bit_cast.hpp>
+#include <mcl/stdint.hpp>
+#include <mcl/scope_exit.hpp>
 
 #include <dynarmic/A32/coprocessor.h>
 
@@ -22,10 +26,6 @@
 #include "backend/A64/emit_a64.h"
 #include "backend/A64/emitter/a64_emitter.h"
 #include "backend/A64/perf_map.h"
-#include "common/assert.h"
-#include "common/bit_util.h"
-#include "common/common_types.h"
-#include "common/scope_exit.h"
 #include "common/variant_util.h"
 #include "frontend/A32/location_descriptor.h"
 #include "frontend/A32/types.h"
@@ -657,10 +657,10 @@ void A32EmitA64::EmitA32SetGEFlagsCompressed(A32EmitContext& ctx, IR::Inst* inst
         ARM64Reg to_store = DecodeReg(ctx.reg_alloc.ScratchGpr());
         u32 imm = args[0].GetImmediateU32();
         u32 ge = 0;
-        ge |= Common::Bit<19>(imm) ? 0xFF000000 : 0;
-        ge |= Common::Bit<18>(imm) ? 0x00FF0000 : 0;
-        ge |= Common::Bit<17>(imm) ? 0x0000FF00 : 0;
-        ge |= Common::Bit<16>(imm) ? 0x000000FF : 0;
+        ge |= mcl::bit::get_bit<19>(imm) ? 0xFF000000 : 0;
+        ge |= mcl::bit::get_bit<18>(imm) ? 0x00FF0000 : 0;
+        ge |= mcl::bit::get_bit<17>(imm) ? 0x0000FF00 : 0;
+        ge |= mcl::bit::get_bit<16>(imm) ? 0x000000FF : 0;
 
         code.MOVI2R(to_store, ge);
         code.STR(INDEX_UNSIGNED, to_store, X28, offsetof(A32JitState, cpsr_ge));
@@ -696,8 +696,8 @@ void A32EmitA64::EmitA32BXWritePC(A32EmitContext& ctx, IR::Inst* inst) {
     if (arg.IsImmediate()) {
         const ARM64Reg scratch = DecodeReg(ctx.reg_alloc.ScratchGpr());
         u32 new_pc = arg.GetImmediateU32();
-        const u32 mask = Common::Bit<0>(new_pc) ? 0xFFFFFFFE : 0xFFFFFFFC;
-        const u32 new_upper = upper_without_t | (Common::Bit<0>(new_pc) ? 1 : 0);
+        const u32 mask = mcl::bit::get_bit<0>(new_pc) ? 0xFFFFFFFE : 0xFFFFFFFC;
+        const u32 new_upper = upper_without_t | (mcl::bit::get_bit<0>(new_pc) ? 1 : 0);
 
         code.MOVI2R(scratch, new_pc & mask);
         code.STR(INDEX_UNSIGNED, scratch, X28, MJitStateReg(A32::Reg::PC));
@@ -833,7 +833,7 @@ void A32EmitA64::DoNotFastmem(const DoNotFastmemMarker& marker) {
 
 template <typename T>
 void A32EmitA64::ReadMemory(A32EmitContext& ctx, IR::Inst* inst, const CodePtr callback_fn) {
-    constexpr size_t bit_size = Common::BitSize<T>();
+    constexpr size_t bit_size = mcl::bitsizeof<T>;
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     ctx.reg_alloc.UseScratch(args[0], ABI_PARAM2);
@@ -846,7 +846,7 @@ void A32EmitA64::ReadMemory(A32EmitContext& ctx, IR::Inst* inst, const CodePtr c
     const auto do_not_fastmem_marker = GenerateDoNotFastmemMarker(ctx, inst);
 
     const auto page_table_lookup = [this, result, vaddr, tmp, callback_fn](FixupBranch& end) {
-        constexpr size_t bit_size = Common::BitSize<T>();
+        constexpr size_t bit_size = mcl::bitsizeof<T>;
 
         code.MOVP2R(result, config.page_table);
         code.MOV(tmp, vaddr, ArithOption{vaddr, ST_LSR, 12});
@@ -945,7 +945,7 @@ void A32EmitA64::ReadMemory(A32EmitContext& ctx, IR::Inst* inst, const CodePtr c
 
 template<typename T>
 void A32EmitA64::WriteMemory(A32EmitContext& ctx, IR::Inst* inst, const CodePtr callback_fn) {
-    constexpr size_t bit_size = Common::BitSize<T>();
+    constexpr size_t bit_size = mcl::bitsizeof<T>;
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     ctx.reg_alloc.ScratchGpr({ABI_RETURN});
@@ -960,7 +960,7 @@ void A32EmitA64::WriteMemory(A32EmitContext& ctx, IR::Inst* inst, const CodePtr 
     const auto do_not_fastmem_marker = GenerateDoNotFastmemMarker(ctx, inst);
 
     const auto page_table_lookup = [this, vaddr, value, page_index, addr, callback_fn](FixupBranch& end) {
-        constexpr size_t bit_size = Common::BitSize<T>();
+        constexpr size_t bit_size = mcl::bitsizeof<T>;
 
         code.MOVP2R(addr, config.page_table);
         code.MOV(DecodeReg(page_index), vaddr, ArithOption{vaddr, ST_LSR, 12});

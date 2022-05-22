@@ -9,7 +9,7 @@
 #include <cstddef>
 #include <string>
 
-#include "common/cast_util.h"
+#include <mcl/bit_cast.hpp>
 
 namespace Dynarmic::BackendA64 {
 
@@ -19,7 +19,7 @@ void PerfMapRegister(const void* start, const void* end, const std::string& frie
 
 template<typename T>
 void PerfMapRegister(T start, const void* end, const std::string& friendly_name) {
-    detail::PerfMapRegister(Common::BitCast<const void*>(start), end, friendly_name);
+    detail::PerfMapRegister(mcl::bit_cast<const void*>(start), end, friendly_name);
 }
 
 void PerfMapClear();

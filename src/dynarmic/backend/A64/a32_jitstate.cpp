@@ -4,11 +4,12 @@
  * General Public License version 2 or any later version.
  */
 
+#include <mcl/assert.hpp>
+#include <mcl/bit_cast.hpp>
+#include <mcl/stdint.hpp>
+
 #include "backend/A64/a32_jitstate.h"
 #include "backend/A64/block_of_code.h"
-#include "common/assert.h"
-#include "common/bit_util.h"
-#include "common/common_types.h"
 #include "frontend/A32/location_descriptor.h"
 
 namespace Dynarmic::BackendA64 {
@@ -55,13 +56,13 @@ u32 A32JitState::Cpsr() const {
     // Q flag
     cpsr |= cpsr_q ? 1 << 27 : 0;
     // GE flags
-    cpsr |= Common::Bit<31>(cpsr_ge) ? 1 << 19 : 0;
-    cpsr |= Common::Bit<23>(cpsr_ge) ? 1 << 18 : 0;
-    cpsr |= Common::Bit<15>(cpsr_ge) ? 1 << 17 : 0;
-    cpsr |= Common::Bit<7>(cpsr_ge) ? 1 << 16 : 0;
+    cpsr |= mcl::bit::get_bit<31>(cpsr_ge) ? 1 << 19 : 0;
+    cpsr |= mcl::bit::get_bit<23>(cpsr_ge) ? 1 << 18 : 0;
+    cpsr |= mcl::bit::get_bit<15>(cpsr_ge) ? 1 << 17 : 0;
+    cpsr |= mcl::bit::get_bit<7>(cpsr_ge) ? 1 << 16 : 0;
     // E flag, T flag
-    cpsr |= Common::Bit<1>(upper_location_descriptor) ? 1 << 9 : 0;
-    cpsr |= Common::Bit<0>(upper_location_descriptor) ? 1 << 5 : 0;
+    cpsr |= mcl::bit::get_bit<1>(upper_location_descriptor) ? 1 << 9 : 0;
+    cpsr |= mcl::bit::get_bit<0>(upper_location_descriptor) ? 1 << 5 : 0;
     // IT state
     cpsr |= static_cast<u32>(upper_location_descriptor & 0b11111100'00000000);
     cpsr |= static_cast<u32>(upper_location_descriptor & 0b00000011'00000000) << 17;
@@ -75,18 +76,18 @@ void A32JitState::SetCpsr(u32 cpsr) {
     // NZCV flags
     cpsr_nzcv = cpsr & 0xF0000000;
     // Q flag
-    cpsr_q = Common::Bit<27>(cpsr) ? 1 : 0;
+    cpsr_q = mcl::bit::get_bit<27>(cpsr) ? 1 : 0;
     // GE flags
     cpsr_ge = 0;
-    cpsr_ge |= Common::Bit<19>(cpsr) ? 0xFF000000 : 0;
-    cpsr_ge |= Common::Bit<18>(cpsr) ? 0x00FF0000 : 0;
-    cpsr_ge |= Common::Bit<17>(cpsr) ? 0x0000FF00 : 0;
-    cpsr_ge |= Common::Bit<16>(cpsr) ? 0x000000FF : 0;
+    cpsr_ge |= mcl::bit::get_bit<19>(cpsr) ? 0xFF000000 : 0;
+    cpsr_ge |= mcl::bit::get_bit<18>(cpsr) ? 0x00FF0000 : 0;
+    cpsr_ge |= mcl::bit::get_bit<17>(cpsr) ? 0x0000FF00 : 0;
+    cpsr_ge |= mcl::bit::get_bit<16>(cpsr) ? 0x000000FF : 0;
 
     upper_location_descriptor &= 0xFFFF0000;
     // E flag, T flag
-    upper_location_descriptor |= Common::Bit<9>(cpsr) ? 2 : 0;
-    upper_location_descriptor |= Common::Bit<5>(cpsr) ? 1 : 0;
+    upper_location_descriptor |= mcl::bit::get_bit<9>(cpsr) ? 2 : 0;
+    upper_location_descriptor |= mcl::bit::get_bit<5>(cpsr) ? 1 : 0;
     // IT state
     upper_location_descriptor |= (cpsr >>  0) & 0b11111100'00000000;
     upper_location_descriptor |= (cpsr >> 17) & 0b00000011'00000000;

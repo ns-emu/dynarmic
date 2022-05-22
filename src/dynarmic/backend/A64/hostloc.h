@@ -5,9 +5,10 @@
  */
 #pragma once
 
+#include <mcl/assert.hpp>
+#include <mcl/stdint.hpp>
+
 #include "backend/A64/emitter/a64_emitter.h"
-#include "common/assert.h"
-#include "common/common_types.h"
 
 namespace Dynarmic::BackendA64 {
 

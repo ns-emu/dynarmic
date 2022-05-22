@@ -2,7 +2,7 @@
 // Licensed under GPLv2+
 // Refer to the license.txt file included.
 
-#include "common/common_types.h"
+#include <mcl/stdint.hpp>
 
 namespace Dynarmic::BackendA64 {
 enum CCFlags {

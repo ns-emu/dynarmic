@@ -7,8 +7,7 @@
 #pragma once
 
 #include <array>
-
-#include "common/common_types.h"
+#include <mcl/stdint.hpp>
 
 namespace Dynarmic::BackendA64 {
 

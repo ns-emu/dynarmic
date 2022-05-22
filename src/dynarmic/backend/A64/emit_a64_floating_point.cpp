@@ -8,11 +8,12 @@
 #include <type_traits>
 #include <utility>
 
+#include <mcl/assert.hpp>
+#include <mcl/stdint.hpp>
+
 #include "backend/A64/abi.h"
 #include "backend/A64/block_of_code.h"
 #include "backend/A64/emit_a64.h"
-#include "common/assert.h"
-#include "common/common_types.h"
 #include "common/fp/fpcr.h"
 #include "common/fp/fpsr.h"
 #include "common/fp/info.h"

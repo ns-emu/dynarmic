@@ -12,7 +12,7 @@
 #include "backend/A64/abi.h"
 #include "backend/A64/block_of_code.h"
 #include "backend/A64/perf_map.h"
-#include "common/assert.h"
+#include <mcl/assert.hpp>
 
 #ifdef _WIN32
     #include <windows.h>

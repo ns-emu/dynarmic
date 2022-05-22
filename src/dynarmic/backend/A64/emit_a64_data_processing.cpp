@@ -4,10 +4,11 @@
  * General Public License version 2 or any later version.
  */
 
+#include <mcl/assert.hpp>
+#include <mcl/stdint.hpp>
+
 #include "backend/A64/block_of_code.h"
 #include "backend/A64/emit_a64.h"
-#include "common/assert.h"
-#include "common/common_types.h"
 #include "frontend/ir/basic_block.h"
 #include "frontend/ir/microinstruction.h"
 #include "frontend/ir/opcodes.h"

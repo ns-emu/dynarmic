@@ -6,11 +6,12 @@
 
 #include <limits>
 
+#include <mcl/assert.hpp>
+#include <mcl/bit/bit_field.hpp>
+#include <mcl/stdint.hpp>
+
 #include "backend/A64/block_of_code.h"
 #include "backend/A64/emit_a64.h"
-#include "common/assert.h"
-#include "common/bit_util.h"
-#include "common/common_types.h"
 #include "frontend/ir/basic_block.h"
 #include "frontend/ir/microinstruction.h"
 #include "frontend/ir/opcodes.h"
@@ -105,7 +106,7 @@ void EmitA64::EmitSignedSaturation(EmitContext& ctx, IR::Inst* inst) {
     const u32 mask = (1u << N) - 1;
     const u32 positive_saturated_value = (1u << (N - 1)) - 1;
     const u32 negative_saturated_value = 1u << (N - 1);
-    const u32 sext_negative_satured_value = Common::SignExtend(N, negative_saturated_value);
+    const u32 sext_negative_satured_value = mcl::bit::sign_extend(N, negative_saturated_value);
 
     const ARM64Reg result = DecodeReg(ctx.reg_alloc.ScratchGpr());
     const ARM64Reg reg_a = DecodeReg(ctx.reg_alloc.UseGpr(args[0]));

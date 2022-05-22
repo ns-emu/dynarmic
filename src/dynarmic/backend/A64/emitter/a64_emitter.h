@@ -8,10 +8,11 @@
 #include <cstring>
 #include <functional>
 
+#include <mcl/assert.hpp>
+#include <mcl/stdint.hpp>
+
 #include "arm_common.h"
 #include "code_block.h"
-#include "common/assert.h"
-#include "common/common_types.h"
 
 namespace Dynarmic::BackendA64::Arm64Gen {
 

@@ -12,11 +12,12 @@
 #include <libkern/OSCacheControl.h>
 #endif
 
+#include <mcl/assert.hpp>
+#include <mcl/bit_cast.hpp>
+#include <mcl/bit/bit_count.hpp>
+#include <mcl/bit/bit_field.hpp>
+
 #include "a64_emitter.h"
-#include "common/assert.h"
-#include "common/bit_util.h"
-#include "common/cast_util.h"
-#include "common/common_types.h"
 #include "common/math_util.h"
 
 namespace Dynarmic::BackendA64::Arm64Gen {
@@ -267,11 +268,11 @@ float FPImm8ToFloat(u8 bits) {
     const u32 mantissa = (bits & 0xF) << 19;
     const u32 f = (sign << 31) | (exp << 23) | mantissa;
 
-    return Dynarmic::Common::BitCast<float>(f);
+    return mcl::bit_cast<float>(f);
 }
 
 bool FPImm8FromFloat(float value, u8* imm_out) {
-    const u32 f = Dynarmic::Common::BitCast<u32>(value);
+    const u32 f = mcl::bit_cast<u32>(value);
     const u32 mantissa4 = (f & 0x7FFFFF) >> 19;
     const u32 exponent = (f >> 23) & 0xFF;
     const u32 sign = f >> 31;
@@ -1857,7 +1858,7 @@ bool ARM64XEmitter::MOVI2R2(ARM64Reg Rd, u64 imm1, u64 imm2) {
 }
 
 void ARM64XEmitter::ABI_PushRegisters(u32 registers) {
-    int num_regs = Common::BitCount(registers);
+    int num_regs = static_cast<int>(mcl::bit::count_ones(registers));
     int stack_size = (num_regs + (num_regs & 1)) * 8;
     int it = 0;
 
@@ -1867,7 +1868,7 @@ void ARM64XEmitter::ABI_PushRegisters(u32 registers) {
         return;
 
     for (int i = 0; i < 32; ++i) {
-        if (Common::Bit(i, registers)) {
+        if (mcl::bit::get_bit(i, registers)) {
             gpr[it++] = static_cast<ARM64Reg>(X0 + i);
         }
     }
@@ -1896,7 +1897,7 @@ void ARM64XEmitter::ABI_PushRegisters(u32 registers) {
 }
 
 void ARM64XEmitter::ABI_PopRegisters(u32 registers) {
-    u8 num_regs = static_cast<u8>(Common::BitCount(registers));
+    u8 num_regs = static_cast<u8>(mcl::bit::count_ones(registers));
     int stack_size = (num_regs + (num_regs & 1)) * 8;
     int it = 0;
 
@@ -1906,7 +1907,7 @@ void ARM64XEmitter::ABI_PopRegisters(u32 registers) {
         return;
 
     for (int i = 0; i < 32; ++i) {
-        if (Common::Bit(i, registers)) {
+        if (mcl::bit::get_bit(i, registers)) {
             gpr[it++] = static_cast<ARM64Reg>(X0 + i);
         }
     }
@@ -3508,11 +3509,11 @@ void ARM64FloatEmitter::ABI_PushRegisters(u32 registers, ARM64Reg tmp) {
     bool bundled_loadstore = false;
 
     for (int i = 0; i < 32; ++i) {
-        if (!Common::Bit(i, registers))
+        if (!mcl::bit::get_bit(i, registers))
             continue;
 
         int count = 0;
-        while (++count < 4 && (i + count) < 32 && Common::Bit(i + count, registers)) {
+        while (++count < 4 && (i + count) < 32 && mcl::bit::get_bit(i + count, registers)) {
         }
         if (count > 1) {
             bundled_loadstore = true;
@@ -3521,12 +3522,12 @@ void ARM64FloatEmitter::ABI_PushRegisters(u32 registers, ARM64Reg tmp) {
     }
 
     if (bundled_loadstore && tmp != INVALID_REG) {
-        int num_regs = Common::BitCount(registers);
+        int num_regs = mcl::bit::count_ones(registers);
         m_emit->SUB(SP, SP, num_regs * 16);
         m_emit->ADD(tmp, SP, 0);
         std::vector<ARM64Reg> island_regs;
         for (int i = 0; i < 32; ++i) {
-            if (!Common::Bit(i, registers))
+            if (!mcl::bit::get_bit(i, registers))
                 continue;
 
             int count = 0;
@@ -3536,7 +3537,7 @@ void ARM64FloatEmitter::ABI_PushRegisters(u32 registers, ARM64Reg tmp) {
             // 2 < 4 && registers[i + 2] true!
             // 3 < 4 && registers[i + 3] true!
             // 4 < 4 && registers[i + 4] false!
-            while (++count < 4 && (i + count) < 32 && Common::Bit(i + count, registers)) {
+            while (++count < 4 && (i + count) < 32 && mcl::bit::get_bit(i + count, registers)) {
             }
 
             if (count == 1)
@@ -3561,7 +3562,7 @@ void ARM64FloatEmitter::ABI_PushRegisters(u32 registers, ARM64Reg tmp) {
     } else {
         std::vector<ARM64Reg> pair_regs;
         for (int i = 0; i < 32; ++i) {
-            if (Common::Bit(i, registers)) {
+            if (mcl::bit::get_bit(i, registers)) {
                 pair_regs.push_back((ARM64Reg)(Q0 + i));
                 if (pair_regs.size() == 2) {
                     STP(128, INDEX_PRE, pair_regs[0], pair_regs[1], SP, -32);
@@ -3575,14 +3576,14 @@ void ARM64FloatEmitter::ABI_PushRegisters(u32 registers, ARM64Reg tmp) {
 }
 void ARM64FloatEmitter::ABI_PopRegisters(u32 registers, ARM64Reg tmp) {
     bool bundled_loadstore = false;
-    int num_regs = Common::BitCount(registers);
+    int num_regs = mcl::bit::count_ones(registers);
 
     for (int i = 0; i < 32; ++i) {
-        if (!Common::Bit(i, registers))
+        if (!mcl::bit::get_bit(i, registers))
             continue;
 
         int count = 0;
-        while (++count < 4 && (i + count) < 32 && Common::Bit(i + count, registers)) {
+        while (++count < 4 && (i + count) < 32 && mcl::bit::get_bit(i + count, registers)) {
         }
         if (count > 1) {
             bundled_loadstore = true;
@@ -3594,11 +3595,11 @@ void ARM64FloatEmitter::ABI_PopRegisters(u32 registers, ARM64Reg tmp) {
         // The temporary register is only used to indicate that we can use this code path
         std::vector<ARM64Reg> island_regs;
         for (int i = 0; i < 32; ++i) {
-            if (!Common::Bit(i, registers))
+            if (!mcl::bit::get_bit(i, registers))
                 continue;
 
             u8 count = 0;
-            while (++count < 4 && (i + count) < 32 && Common::Bit(i + count, registers)) {
+            while (++count < 4 && (i + count) < 32 && mcl::bit::get_bit(i + count, registers)) {
             }
 
             if (count == 1)
@@ -3624,7 +3625,7 @@ void ARM64FloatEmitter::ABI_PopRegisters(u32 registers, ARM64Reg tmp) {
         bool odd = num_regs % 2;
         std::vector<ARM64Reg> pair_regs;
         for (int i = 31; i >= 0; --i) {
-            if (!Common::Bit(i, registers))
+            if (!mcl::bit::get_bit(i, registers))
                 continue;
 
             if (odd) {
@@ -3878,7 +3879,7 @@ void ARM64FloatEmitter::MOVI2F(ARM64Reg Rd, float value, ARM64Reg scratch, bool 
         if (negate)
             value = -value;
 
-        const u32 ival = Dynarmic::Common::BitCast<u32>(value);
+        const u32 ival = mcl::bit_cast<u32>(value);
         m_emit->MOVI2R(scratch, ival);
         FMOV(Rd, scratch);
     }
