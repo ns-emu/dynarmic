@@ -4,7 +4,7 @@
  * General Public License version 2 or any later version.
  */
 
-#include "backend/A64/exception_handler.h"
+#include "dynarmic/backend/A64/exception_handler.h"
 
 namespace Dynarmic::BackendA64 {
 

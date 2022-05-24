@@ -16,11 +16,10 @@
 
 #include <mcl/bitsizeof.hpp>
 
-#include "backend/A64/reg_alloc.h"
-#include "backend/A64/emitter/a64_emitter.h"
-#include "common/fp/rounding_mode.h"
-#include "frontend/ir/location_descriptor.h"
-#include "frontend/ir/terminal.h"
+#include "dynarmic/backend/A64/emitter/a64_emitter.h"
+#include "dynarmic/common/fp/rounding_mode.h"
+#include "dynarmic/ir/location_descriptor.h"
+#include "dynarmic/ir/terminal.h"
 
 namespace Dynarmic::IR {
 class Block;
@@ -30,9 +29,10 @@ class Inst;
 namespace Dynarmic::BackendA64 {
 
 class BlockOfCode;
+class RegAlloc;
 
 using namespace Arm64Gen;
-
+using CodePtr = const void*;
 using A64FullVectorWidth = std::integral_constant<size_t, 128>;
 
 // Array alias that always sizes itself according to the given type T
@@ -80,7 +80,7 @@ protected:
 #define OPCODE(name, type, ...) void Emit##name(EmitContext& ctx, IR::Inst* inst);
 #define A32OPC(...)
 #define A64OPC(...)
-#include "backend/A64/opcodes.inc"
+#include "dynarmic/backend/A64/opcodes.inc"
 #undef OPCODE
 #undef A32OPC
 #undef A64OPC

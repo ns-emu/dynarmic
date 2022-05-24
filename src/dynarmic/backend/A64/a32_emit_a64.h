@@ -13,14 +13,14 @@
 #include <tuple>
 #include <unordered_map>
 
-#include "backend/A64/a32_jitstate.h"
-#include "backend/A64/block_range_information.h"
-#include "backend/A64/emit_a64.h"
-#include "backend/A64/exception_handler.h"
-#include "dynarmic/A32/a32.h"
-#include "dynarmic/A32/config.h"
-#include "frontend/A32/location_descriptor.h"
-#include "frontend/ir/terminal.h"
+#include "dynarmic/backend/A64/a32_jitstate.h"
+#include "dynarmic/backend/A64/block_range_information.h"
+#include "dynarmic/backend/A64/emit_a64.h"
+#include "dynarmic/backend/A64/exception_handler.h"
+#include "dynarmic/interface/A32/a32.h"
+#include "dynarmic/interface/A32/config.h"
+#include "dynarmic/frontend/A32/a32_location_descriptor.h"
+#include "dynarmic/ir/terminal.h"
 
 namespace Dynarmic::BackendA64 {
 
@@ -102,7 +102,7 @@ protected:
 #define OPCODE(...)
 #define A32OPC(name, type, ...) void EmitA32##name(A32EmitContext& ctx, IR::Inst* inst);
 #define A64OPC(...)
-#include "frontend/ir/opcodes.inc"
+#include "dynarmic/ir/opcodes.inc"
 #undef OPCODE
 #undef A32OPC
 #undef A64OPC

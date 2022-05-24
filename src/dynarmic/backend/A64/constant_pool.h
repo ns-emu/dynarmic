@@ -10,6 +10,8 @@
 
 #include <mcl/stdint.hpp>
 
+#include "dynarmic/backend/A64/emitter/a64_emitter.h"
+
 namespace Dynarmic::BackendA64 {
 
 class BlockOfCode;

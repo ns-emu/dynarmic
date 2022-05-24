@@ -18,7 +18,7 @@
 #include <mcl/bit/bit_field.hpp>
 
 #include "a64_emitter.h"
-#include "common/math_util.h"
+#include "dynarmic/common/math_util.h"
 
 namespace Dynarmic::BackendA64::Arm64Gen {
 

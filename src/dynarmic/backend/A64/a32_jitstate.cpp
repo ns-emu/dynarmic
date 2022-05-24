@@ -8,9 +8,9 @@
 #include <mcl/bit_cast.hpp>
 #include <mcl/stdint.hpp>
 
-#include "backend/A64/a32_jitstate.h"
-#include "backend/A64/block_of_code.h"
-#include "frontend/A32/location_descriptor.h"
+#include "dynarmic/backend/A64/a32_jitstate.h"
+#include "dynarmic/backend/A64/block_of_code.h"
+#include "dynarmic/frontend/A32/a32_location_descriptor.h"
 
 namespace Dynarmic::BackendA64 {
 

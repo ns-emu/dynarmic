@@ -8,7 +8,7 @@
 #include <mcl/assert.hpp>
 #include <mcl/stdint.hpp>
 
-#include "backend/A64/emitter/a64_emitter.h"
+#include "dynarmic/backend/A64/emitter/a64_emitter.h"
 
 namespace Dynarmic::BackendA64 {
 

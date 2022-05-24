@@ -8,11 +8,13 @@
 #include <cstring>
 #include <limits>
 
-#include "backend/A64/a32_jitstate.h"
-#include "backend/A64/abi.h"
-#include "backend/A64/block_of_code.h"
-#include "backend/A64/perf_map.h"
 #include <mcl/assert.hpp>
+
+#include "dynarmic/backend/A64/a32_jitstate.h"
+#include "dynarmic/backend/A64/abi.h"
+#include "dynarmic/interface/halt_reason.h"
+#include "dynarmic/backend/A64/block_of_code.h"
+#include "dynarmic/backend/A64/perf_map.h"
 
 #ifdef _WIN32
     #include <windows.h>

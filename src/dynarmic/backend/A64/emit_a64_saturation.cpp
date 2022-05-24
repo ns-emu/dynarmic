@@ -10,11 +10,12 @@
 #include <mcl/bit/bit_field.hpp>
 #include <mcl/stdint.hpp>
 
-#include "backend/A64/block_of_code.h"
-#include "backend/A64/emit_a64.h"
-#include "frontend/ir/basic_block.h"
-#include "frontend/ir/microinstruction.h"
-#include "frontend/ir/opcodes.h"
+#include "dynarmic/backend/A64/block_of_code.h"
+#include "dynarmic/backend/A64/emit_a64.h"
+#include "dynarmic/backend/A64/reg_alloc.h"
+#include "dynarmic/ir/basic_block.h"
+#include "dynarmic/ir/microinstruction.h"
+#include "dynarmic/ir/opcodes.h"
 
 namespace Dynarmic::BackendA64 {
 

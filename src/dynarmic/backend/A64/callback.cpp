@@ -4,8 +4,8 @@
  * General Public License version 2 or any later version.
  */
 
-#include "backend/A64/callback.h"
-#include "backend/A64/block_of_code.h"
+#include "dynarmic/backend/A64/callback.h"
+#include "dynarmic/backend/A64/block_of_code.h"
 
 namespace Dynarmic::BackendA64 {
 

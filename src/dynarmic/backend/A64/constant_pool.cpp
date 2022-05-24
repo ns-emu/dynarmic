@@ -8,8 +8,8 @@
 
 #include <mcl/assert.hpp>
 
-#include "backend/A64/block_of_code.h"
-#include "backend/A64/constant_pool.h"
+#include "dynarmic/backend/A64/block_of_code.h"
+#include "dynarmic/backend/A64/constant_pool.h"
 
 namespace Dynarmic::BackendA64 {
 

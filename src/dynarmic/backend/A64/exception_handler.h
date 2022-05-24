@@ -12,7 +12,7 @@
 
 #include <mcl/stdint.hpp>
 
-#include "backend/A64/a32_jitstate.h"
+#include "dynarmic/backend/A64/a32_jitstate.h"
 
 namespace Dynarmic::BackendA64 {
 

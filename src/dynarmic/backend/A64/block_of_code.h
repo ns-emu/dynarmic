@@ -12,10 +12,11 @@
 
 #include <mcl/stdint.hpp>
 
-#include "backend/A64/callback.h"
-#include "backend/A64/constant_pool.h"
-#include "backend/A64/jitstate_info.h"
-#include "backend/A64/emitter/a64_emitter.h"
+#include "dynarmic/backend/A64/callback.h"
+#include "dynarmic/backend/A64/constant_pool.h"
+#include "dynarmic/backend/A64/jitstate_info.h"
+#include "dynarmic/backend/A64/emitter/a64_emitter.h"
+#include "dynarmic/interface/halt_reason.h"
 
 namespace Dynarmic::BackendA64 {
 

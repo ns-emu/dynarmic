@@ -16,22 +16,23 @@
 #include <mcl/stdint.hpp>
 #include <mcl/scope_exit.hpp>
 
-#include <dynarmic/A32/coprocessor.h>
+#include <dynarmic/interface/A32/coprocessor.h>
 
-#include "backend/A64/a32_emit_a64.h"
-#include "backend/A64/a32_jitstate.h"
-#include "backend/A64/abi.h"
-#include "backend/A64/block_of_code.h"
-#include "backend/A64/devirtualize.h"
-#include "backend/A64/emit_a64.h"
-#include "backend/A64/emitter/a64_emitter.h"
-#include "backend/A64/perf_map.h"
-#include "common/variant_util.h"
-#include "frontend/A32/location_descriptor.h"
-#include "frontend/A32/types.h"
-#include "frontend/ir/basic_block.h"
-#include "frontend/ir/microinstruction.h"
-#include "frontend/ir/opcodes.h"
+#include "dynarmic/backend/A64/a32_emit_a64.h"
+#include "dynarmic/backend/A64/a32_jitstate.h"
+#include "dynarmic/backend/A64/abi.h"
+#include "dynarmic/backend/A64/block_of_code.h"
+#include "dynarmic/backend/A64/devirtualize.h"
+#include "dynarmic/backend/A64/emit_a64.h"
+#include "dynarmic/backend/A64/emitter/a64_emitter.h"
+#include "dynarmic/backend/A64/perf_map.h"
+#include "dynarmic/backend/A64/reg_alloc.h"
+#include "dynarmic/common/variant_util.h"
+#include "dynarmic/frontend/A32/a32_location_descriptor.h"
+#include "dynarmic/frontend/A32/a32_types.h"
+#include "dynarmic/ir/basic_block.h"
+#include "dynarmic/ir/microinstruction.h"
+#include "dynarmic/ir/opcodes.h"
 
 // TODO: Have ARM flags in host flags and not have them use up GPR registers unless necessary.
 // TODO: Actually implement that proper instruction selector you've always wanted to sweetheart.
@@ -126,7 +127,7 @@ A32EmitA64::BlockDescriptor A32EmitA64::Emit(IR::Block& block) {
          A32EmitA64::EmitA32##name(ctx, inst);                                   \
          break;
 #define A64OPC(...)
-#include "backend/A64/opcodes.inc"
+#include "dynarmic/backend/A64/opcodes.inc"
 #undef OPCODE
 #undef A32OPC
 #undef A64OPC

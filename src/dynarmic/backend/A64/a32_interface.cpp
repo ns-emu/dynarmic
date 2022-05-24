@@ -12,20 +12,21 @@
 #include <mcl/stdint.hpp>
 #include <mcl/scope_exit.hpp>
 
-#include <dynarmic/A32/a32.h>
-#include <dynarmic/A32/context.h>
+#include <dynarmic/interface/A32/a32.h>
+#include <dynarmic/interface/A32/context.h>
 
-#include "backend/A64/a32_emit_a64.h"
-#include "backend/A64/a32_jitstate.h"
-#include "backend/A64/block_of_code.h"
-#include "backend/A64/callback.h"
-#include "backend/A64/devirtualize.h"
-#include "backend/A64/jitstate_info.h"
-#include "common/llvm_disassemble.h"
-#include "frontend/A32/translate/translate.h"
-#include "frontend/ir/basic_block.h"
-#include "frontend/ir/location_descriptor.h"
-#include "ir_opt/passes.h"
+#include "dynarmic/backend/A64/a32_emit_a64.h"
+#include "dynarmic/backend/A64/a32_jitstate.h"
+#include "dynarmic/backend/A64/block_of_code.h"
+#include "dynarmic/backend/A64/callback.h"
+#include "dynarmic/backend/A64/devirtualize.h"
+#include "dynarmic/backend/A64/jitstate_info.h"
+#include "dynarmic/common/llvm_disassemble.h"
+#include "dynarmic/frontend/A32/translate/a32_translate.h"
+#include "dynarmic/ir/basic_block.h"
+#include "dynarmic/ir/location_descriptor.h"
+#include "dynarmic/ir/opt/passes.h"
+#include "dynarmic/common/atomic.h"
 
 namespace Dynarmic::A32 {
 

@@ -11,8 +11,8 @@
 #include <fmt/ostream.h>
 #include <mcl/assert.hpp>
 
-#include "backend/A64/abi.h"
-#include "backend/A64/reg_alloc.h"
+#include "dynarmic/backend/A64/abi.h"
+#include "dynarmic/backend/A64/reg_alloc.h"
 
 namespace Dynarmic::BackendA64 {
 

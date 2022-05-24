@@ -14,7 +14,7 @@
 #include <mcl/assert.hpp>
 #include <mcl/bit_cast.hpp>
 
-#include "backend/A64/callback.h"
+#include "dynarmic/backend/A64/callback.h"
 
 namespace Dynarmic::BackendA64 {
 

@@ -4,7 +4,7 @@
  * General Public License version 2 or any later version.
  */
 
-#include "backend/A64/hostloc.h"
+#include "dynarmic/backend/A64/hostloc.h"
 
 namespace Dynarmic::BackendA64 {
 

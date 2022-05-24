@@ -12,14 +12,15 @@
 #include <mcl/stdint.hpp>
 #include <mcl/scope_exit.hpp>
 
-#include "backend/A64/block_of_code.h"
-#include "backend/A64/emit_a64.h"
-#include "backend/A64/hostloc.h"
-#include "backend/A64/perf_map.h"
-#include "common/variant_util.h"
-#include "frontend/ir/basic_block.h"
-#include "frontend/ir/microinstruction.h"
-#include "frontend/ir/opcodes.h"
+#include "dynarmic/backend/A64/block_of_code.h"
+#include "dynarmic/backend/A64/emit_a64.h"
+#include "dynarmic/backend/A64/hostloc.h"
+#include "dynarmic/backend/A64/perf_map.h"
+#include "dynarmic/backend/A64/reg_alloc.h"
+#include "dynarmic/common/variant_util.h"
+#include "dynarmic/ir/basic_block.h"
+#include "dynarmic/ir/microinstruction.h"
+#include "dynarmic/ir/opcodes.h"
 
 // TODO: Have ARM flags in host flags and not have them use up GPR registers unless necessary.
 // TODO: Actually implement that proper instruction selector you've always wanted to sweetheart.
