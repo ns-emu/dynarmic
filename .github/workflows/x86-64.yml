@@ -11,6 +11,10 @@ jobs:
       matrix:
         os: [ windows-latest, ubuntu-latest, macos-latest ]
         cpu_detection: [ 0, 1 ]
+        arch: [ x64, arm64]
+        exclude:
+          - cpu_detection: 1
+            arch: arm64
       fail-fast: false
 
     runs-on: ${{matrix.os}}
@@ -20,6 +24,10 @@ jobs:
       - name: Install build dependencies
         if: ${{matrix.os == 'ubuntu-latest'}}
         run: sudo apt-get install llvm ninja-build
+
+      - name: Install cross-compile dependencies
+        if: ${{matrix.os == 'ubuntu-latest' && matrix.arch == 'arm64' }}
+        run: sudo apt-get install gcc-10-aarch64-linux-gnu g++-10-aarch64-linux-gnu qemu-user
 
       - name: Install build dependencies
         if: ${{matrix.os == 'macos-latest'}}
@@ -49,7 +57,7 @@ jobs:
         run: UNICORN_ARCHS=aarch64,arm ./make.sh
 
       - name: Configure CMake
-        if: ${{matrix.os == 'ubuntu-latest'}}
+        if: ${{matrix.os == 'ubuntu-latest' && matrix.arch != 'arm64'}}
         env:
           CC: gcc-10
           CXX: g++-10
@@ -67,7 +75,20 @@ jobs:
           -G Ninja
 
       - name: Configure CMake
-        if: ${{matrix.os == 'macos-latest'}}
+        if: ${{matrix.os == 'ubuntu-latest' && matrix.arch == 'arm64'}}
+        env:
+          CC: aarch64-linux-gnu-gcc-10
+          CXX: aarch64-linux-gnu-g++-10
+        run: >
+          cmake
+          -B ${{github.workspace}}/build
+          -DBoost_INCLUDE_DIRS=${{github.workspace}}/externals/ext-boost
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+          -DDYNARMIC_FRONTENDS="A32"
+          -G Ninja
+
+      - name: Configure CMake
+        if: ${{matrix.os == 'macos-latest' && matrix.arch == 'x64'}}
         run: >
           cmake
           -B ${{github.workspace}}/build
@@ -81,7 +102,18 @@ jobs:
           -G Ninja
 
       - name: Configure CMake
-        if: ${{matrix.os == 'windows-latest'}}
+        if: ${{matrix.os == 'macos-latest' && matrix.arch == 'arm64'}}
+        run: >
+          cmake
+          -B ${{github.workspace}}/build
+          -DBoost_INCLUDE_DIRS=${{github.workspace}}/externals/ext-boost
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+          -DDYNARMIC_FRONTENDS="A32"
+          -DCMAKE_OSX_ARCHITECTURES=arm64
+          -G Ninja
+
+      - name: Configure CMake
+        if: ${{matrix.os == 'windows-latest' && matrix.arch == 'x64'}}
         run: >
           cmake
           -B ${{github.workspace}}/build
@@ -91,11 +123,23 @@ jobs:
           -G "Visual Studio 17 2022"
           -A x64
 
+      - name: Configure CMake
+        if: ${{matrix.os == 'windows-latest' && matrix.arch == 'arm64'}}
+        run: >
+          cmake
+          -B ${{github.workspace}}/build
+          -DBoost_INCLUDE_DIRS=${{github.workspace}}/externals/ext-boost
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+          -DDYNARMIC_FRONTENDS="A32"
+          -G "Visual Studio 17 2022"
+          -A arm64
+
       - name: Build
         working-directory: ${{github.workspace}}/build
         run: cmake --build . --config Release
 
       - name: Test
+        if: ${{matrix.arch == 'x64'}}
         env:
           DYLD_FALLBACK_LIBRARY_PATH: ${{github.workspace}}/externals/unicorn
         working-directory: ${{github.workspace}}/build
