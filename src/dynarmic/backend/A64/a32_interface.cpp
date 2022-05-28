@@ -60,7 +60,7 @@ struct Jit::Impl {
     boost::icl::interval_set<u32> invalid_cache_ranges;
     bool invalidate_entire_cache = false;
 
-    void Execute() {
+    HaltReason Execute() {
         const CodePtr current_codeptr = [this]{
             // RSB optimization
             const u32 new_rsb_ptr = (jit_state.rsb_ptr - 1) & A32JitState::RSBPtrMask;
@@ -72,11 +72,15 @@ struct Jit::Impl {
             return GetCurrentBlock();
         }();
 
-        block_of_code.RunCode(&jit_state, current_codeptr);
+        return block_of_code.RunCode(&jit_state, current_codeptr);
     }
 
-    void Step() {
-        block_of_code.StepCode(&jit_state, GetCurrentSingleStep());
+    HaltReason Step() {
+        return block_of_code.StepCode(&jit_state, GetCurrentSingleStep());
+    }
+
+    void HaltExecution(HaltReason hr) {
+        Atomic::Or(&jit_state.halt_reason, static_cast<u32>(hr));
     }
 
     std::string Disassemble(const IR::LocationDescriptor& descriptor) {
@@ -117,7 +121,7 @@ struct Jit::Impl {
 
     void RequestCacheInvalidation() {
         if (jit_interface->is_executing) {
-            jit_state.halt_requested = true;
+            HaltExecution(HaltReason::CacheInvalidation);
             return;
         }
 
@@ -155,8 +159,8 @@ private:
             PerformCacheInvalidation();
         }
 
-        IR::Block ir_block = A32::Translate(A32::LocationDescriptor{descriptor}, [this](u32 vaddr) { return config.callbacks->MemoryReadCode(vaddr); }, {config.define_unpredictable_behaviour, config.hook_hint_instructions});
         if (config.enable_optimizations) {
+        IR::Block ir_block = A32::Translate(A32::LocationDescriptor{descriptor}, config.callbacks, {config.arch_version, config.define_unpredictable_behaviour, config.hook_hint_instructions});
             Optimization::A32GetSetElimination(ir_block);
             Optimization::DeadCodeElimination(ir_block);
             Optimization::A32ConstantMemoryReads(ir_block, config.callbacks);
@@ -173,28 +177,28 @@ Jit::Jit(UserConfig config) : impl(std::make_unique<Impl>(this, std::move(config
 
 Jit::~Jit() = default;
 
-void Jit::Run() {
+HaltReason Jit::Run() {
     ASSERT(!is_executing);
     is_executing = true;
     SCOPE_EXIT { this->is_executing = false; };
 
-    impl->jit_state.halt_requested = false;
-
-    impl->Execute();
+    const HaltReason hr = impl->Execute();
 
     impl->PerformCacheInvalidation();
+
+    return hr;
 }
 
-void Jit::Step() {
+HaltReason Jit::Step() {
     ASSERT(!is_executing);
     is_executing = true;
     SCOPE_EXIT { this->is_executing = false; };
 
-    impl->jit_state.halt_requested = true;
-
-    impl->Step();
+    const HaltReason hr = impl->Step();
 
     impl->PerformCacheInvalidation();
+
+    return hr;
 }
 
 void Jit::ClearCache() {
@@ -212,8 +216,8 @@ void Jit::Reset() {
     impl->jit_state = {};
 }
 
-void Jit::HaltExecution() {
-    impl->jit_state.halt_requested = true;
+void Jit::HaltExecution(HaltReason hr) {
+    impl->HaltExecution(hr);
 }
 
 std::array<u32, 16>& Jit::Regs() {

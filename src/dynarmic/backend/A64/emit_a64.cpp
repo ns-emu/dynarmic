@@ -242,6 +242,12 @@ void EmitA64::Patch(const IR::LocationDescriptor& desc, CodePtr bb) {
         code.FlushIcache();
     }
 
+    for (CodePtr location : patch_info.jz) {
+        code.SetCodePtr(location);
+        EmitPatchJz(desc, bb);
+        code.FlushIcache();
+    }
+
     for (CodePtr location : patch_info.jmp) {
         code.SetCodePtr(location);
         EmitPatchJmp(desc, bb);

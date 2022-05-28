@@ -131,12 +131,12 @@ size_t BlockOfCode::SpaceRemaining() const {
     return std::min(TOTAL_CODE_SIZE - far_code_offset, FAR_CODE_OFFSET - near_code_offset);
 }
 
-void BlockOfCode::RunCode(void* jit_state, CodePtr code_ptr) const {
-    run_code(jit_state, code_ptr);
+HaltReason BlockOfCode::RunCode(void* jit_state, CodePtr code_ptr) const {
+    return run_code(jit_state, code_ptr);
 }
 
-void BlockOfCode::StepCode(void* jit_state, CodePtr code_ptr) const {
-    step_code(jit_state, code_ptr);
+HaltReason BlockOfCode::StepCode(void* jit_state, CodePtr code_ptr) const {
+    return step_code(jit_state, code_ptr);
 }
 
 void BlockOfCode::ReturnFromRunCode(bool fpscr_already_exited) {
@@ -155,6 +155,7 @@ void BlockOfCode::ForceReturnFromRunCode(bool fpscr_already_exited) {
 
 void BlockOfCode::GenRunCode() {
     const u8* loop, *enter_fpscr_then_loop;
+    std::vector<Arm64Gen::FixupBranch> return_to_caller_fpscr_already_exited;
 
     AlignCode16();
     run_code = reinterpret_cast<RunCodeFuncType>(GetWritableCodePtr());
@@ -173,6 +174,9 @@ void BlockOfCode::GenRunCode() {
     STR(Arm64Gen::INDEX_UNSIGNED, ABI_RETURN, Arm64Gen::X28, jsi.offsetof_cycles_to_run);
     MOV(Arm64Gen::X26, ABI_RETURN);
 
+    LDR(Arm64Gen::INDEX_UNSIGNED, ABI_SCRATCH1, Arm64Gen::X28, jsi.offsetof_halt_reason);
+    return_to_caller_fpscr_already_exited.push_back(CBNZ(ABI_SCRATCH1));
+
     SwitchFpscrOnEntry();
     BR(Arm64Gen::X25);
 
@@ -181,9 +185,14 @@ void BlockOfCode::GenRunCode() {
     ABI_PushCalleeSaveRegistersAndAdjustStack(*this);
 
     MOV(Arm64Gen::X28, ABI_PARAM1);
-    
+
     MOVI2R(Arm64Gen::X26, 1);
-    STR(Arm64Gen::INDEX_UNSIGNED, Arm64Gen::X26, Arm64Gen::X28, jsi.offsetof_cycles_to_run);    
+    STR(Arm64Gen::INDEX_UNSIGNED, Arm64Gen::X26, Arm64Gen::X28, jsi.offsetof_cycles_to_run);
+
+    LDR(Arm64Gen::INDEX_UNSIGNED, DecodeReg(ABI_SCRATCH1), Arm64Gen::X28, jsi.offsetof_halt_reason);
+    return_to_caller_fpscr_already_exited.push_back(CBNZ(ABI_SCRATCH1));
+    ORRI2R(ABI_SCRATCH1, ABI_SCRATCH1, static_cast<u32>(HaltReason::Step));
+    STR(Arm64Gen::INDEX_UNSIGNED, DecodeReg(ABI_SCRATCH1), Arm64Gen::X28, jsi.offsetof_halt_reason);
 
     SwitchFpscrOnEntry();
     BR(ABI_PARAM2);
@@ -192,23 +201,30 @@ void BlockOfCode::GenRunCode() {
     SwitchFpscrOnEntry();
     loop = GetCodePtr();
     cb.LookupBlock->EmitCall(*this);
-    BR(ABI_RETURN);    
+    BR(ABI_RETURN);
 
     // Return from run code variants
-    const auto emit_return_from_run_code = [this, &loop, &enter_fpscr_then_loop](bool fpscr_already_exited, bool force_return){
+    const auto emit_return_from_run_code = [this, &loop, &enter_fpscr_then_loop](bool fpscr_already_exited, bool force_return) {
+        Arm64Gen::FixupBranch return_to_caller;
         if (!force_return) {
+            LDR(Arm64Gen::INDEX_UNSIGNED, DecodeReg(ABI_SCRATCH1), Arm64Gen::X28, jsi.offsetof_halt_reason);
+            return_to_caller = CBNZ(ABI_SCRATCH1);
             CMP(Arm64Gen::X26, Arm64Gen::ZR);
             B(CC_GT, fpscr_already_exited ? enter_fpscr_then_loop : loop);
+            SetJumpTarget(return_to_caller);
         }
 
         if (!fpscr_already_exited) {
             SwitchFpscrOnExit();
         }
-
         cb.AddTicks->EmitCall(*this, [this](RegList param) {
             LDR(Arm64Gen::INDEX_UNSIGNED, param[0], Arm64Gen::X28, jsi.offsetof_cycles_to_run);
             SUB(param[0], param[0], Arm64Gen::X26);
         });
+
+        LDR(Arm64Gen::INDEX_UNSIGNED, DecodeReg(ABI_RETURN), Arm64Gen::X28, jsi.offsetof_halt_reason);
+        // TODO: lock a mutex
+        STR(Arm64Gen::INDEX_UNSIGNED, Arm64Gen::WZR, Arm64Gen::X28, jsi.offsetof_halt_reason);
 
         ABI_PopCalleeSaveRegistersAndAdjustStack(*this);
         RET();
@@ -224,6 +240,8 @@ void BlockOfCode::GenRunCode() {
     emit_return_from_run_code(false, true);
 
     return_from_run_code[FPSCR_ALREADY_EXITED | FORCE_RETURN] = AlignCode16();
+    for (const auto& jump_target : return_to_caller_fpscr_already_exited)
+        SetJumpTarget(jump_target);
     emit_return_from_run_code(true, true);
 
     PerfMapRegister(run_code, GetCodePtr(), "dynarmic_dispatcher");

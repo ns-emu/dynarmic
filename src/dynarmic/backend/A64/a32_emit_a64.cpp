@@ -1419,15 +1419,28 @@ void A32EmitA64::EmitTerminalImpl(IR::Term::LinkBlock terminal, IR::LocationDesc
         code.ReturnFromRunCode();
         return;
     }
+    
+    if (config.enable_cycle_counting) {
+        code.CMP(X26, ZR);
 
-    code.CMP(X26, ZR);
-
-    patch_information[terminal.next].jg.emplace_back(code.GetCodePtr());
-    if (auto next_bb = GetBasicBlock(terminal.next)) {
-        EmitPatchJg(terminal.next, next_bb->entrypoint);
+        patch_information[terminal.next].jg.emplace_back(code.GetCodePtr());
+        if (const auto next_bb = GetBasicBlock(terminal.next)) {
+            EmitPatchJg(terminal.next, next_bb->entrypoint);
+        } else {
+            EmitPatchJg(terminal.next);
+        }
     } else {
-        EmitPatchJg(terminal.next);
+        code.LDR(INDEX_UNSIGNED, DecodeReg(code.ABI_SCRATCH1), X28, offsetof(A32JitState, halt_reason));
+        code.CMP(code.ABI_SCRATCH1, ZR);
+
+        patch_information[terminal.next].jz.emplace_back(code.GetCodePtr());
+        if (const auto next_bb = GetBasicBlock(terminal.next)) {
+            EmitPatchJz(terminal.next, next_bb->entrypoint);
+        } else {
+            EmitPatchJz(terminal.next);
+        }
     }
+
     FixupBranch dest = code.B();
 
     code.SwitchToFarCode();    
@@ -1495,7 +1508,7 @@ void A32EmitA64::EmitTerminalImpl(IR::Term::CheckBit terminal, IR::LocationDescr
 }
 
 void A32EmitA64::EmitTerminalImpl(IR::Term::CheckHalt terminal, IR::LocationDescriptor initial_location, bool is_single_step) {
-    code.LDRB(INDEX_UNSIGNED, DecodeReg(code.ABI_SCRATCH1), X28, offsetof(A32JitState, halt_requested));
+    code.LDR(INDEX_UNSIGNED, DecodeReg(code.ABI_SCRATCH1), X28, offsetof(A32JitState, halt_reason));
     // Conditional branch only gives +/- 1MB of branch distance
     FixupBranch zero = code.CBZ(DecodeReg(code.ABI_SCRATCH1));
     code.B(code.GetForceReturnFromRunCodeAddress());
@@ -1517,6 +1530,32 @@ void A32EmitA64::EmitPatchJg(const IR::LocationDescriptor& target_desc, CodePtr 
         FixupBranch cc_le = code.B(CC_LE);
         code.B(ptr);
         code.SetJumpTarget(cc_le);
+    };
+
+    if (target_code_ptr) {
+        long_branch_gt(target_code_ptr);
+    } else {
+        code.MOVI2R(DecodeReg(code.ABI_SCRATCH1), A32::LocationDescriptor{target_desc}.PC());
+        code.STR(INDEX_UNSIGNED, DecodeReg(code.ABI_SCRATCH1), X28, MJitStateReg(A32::Reg::PC));
+        long_branch_gt(code.GetReturnFromRunCodeAddress());
+    }
+    code.EnsurePatchLocationSize(patch_location, 24);
+}
+
+void A32EmitA64::EmitPatchJz(const IR::LocationDescriptor& target_desc, CodePtr target_code_ptr) {
+    const CodePtr patch_location = code.GetCodePtr();
+
+    auto long_branch_gt = [this](CodePtr ptr){
+        const s64 distance = reinterpret_cast<s64>(ptr) - reinterpret_cast<s64>(code.GetCodePtr());
+
+        if((distance >> 2) >= -0x40000 && (distance >> 2) <= 0x3FFFF) {
+            code.B(CC_EQ, ptr);
+            return;
+        }
+
+        FixupBranch cc_neq = code.B(CC_NEQ);
+        code.B(ptr);
+        code.SetJumpTarget(cc_neq);
     };
 
     if (target_code_ptr) {

@@ -48,8 +48,8 @@ struct A32JitState {
     u64 guest_fpsr = 0;
     u64 save_host_FPCR = 0;
     s64 cycles_to_run = 0;
-    s64 cycles_remaining = 0;
-    bool halt_requested = false;
+    u64 cycles_remaining = 0;
+    volatile u32 halt_reason = 0;
     bool check_bit = false;
 
     // Exclusive state

@@ -49,9 +49,9 @@ public:
     size_t SpaceRemaining() const;
 
     /// Runs emulated code from code_ptr.
-    void RunCode(void* jit_state, CodePtr code_ptr) const;
+    HaltReason RunCode(void* jit_state, CodePtr code_ptr) const;
     /// Runs emulated code from code_ptr for a single cycle.
-    void StepCode(void* jit_state, CodePtr code_ptr) const;
+    HaltReason StepCode(void* jit_state, CodePtr code_ptr) const;
     /// Code emitter: Returns to dispatcher
     void ReturnFromRunCode(bool fpscr_already_exited = false);
     /// Code emitter: Returns to dispatcher, forces return to host
@@ -135,7 +135,7 @@ private:
     CodePtr near_code_ptr;
     CodePtr far_code_ptr;
 
-    using RunCodeFuncType = void(*)(void*, CodePtr);
+    using RunCodeFuncType = HaltReason (*)(void*, CodePtr);
     RunCodeFuncType run_code = nullptr;
     RunCodeFuncType step_code = nullptr;
     static constexpr size_t FPSCR_ALREADY_EXITED = 1 << 0;
