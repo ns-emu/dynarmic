@@ -159,14 +159,15 @@ private:
             PerformCacheInvalidation();
         }
 
-        if (config.enable_optimizations) {
         IR::Block ir_block = A32::Translate(A32::LocationDescriptor{descriptor}, config.callbacks, {config.arch_version, config.define_unpredictable_behaviour, config.hook_hint_instructions});
+        if (config.HasOptimization(OptimizationFlag::GetSetElimination)) {
             Optimization::A32GetSetElimination(ir_block);
             Optimization::DeadCodeElimination(ir_block);
+        }
+        if (config.HasOptimization(OptimizationFlag::ConstProp)) {
             Optimization::A32ConstantMemoryReads(ir_block, config.callbacks);
             Optimization::ConstantPropagation(ir_block);
             Optimization::DeadCodeElimination(ir_block);
-            Optimization::A32MergeInterpretBlocksPass(ir_block, config.callbacks);
         }
         Optimization::VerificationPass(ir_block);
         return emitter.Emit(ir_block);
