@@ -48,6 +48,7 @@ static size_t GetBitWidth(IR::Type type) {
     case IR::Type::Cond:
     case IR::Type::Void:
     case IR::Type::Table:
+    case IR::Type::AccType:
         ASSERT_FALSE("Type {} cannot be represented at runtime", type);
         return 0;
     case IR::Type::Opaque:
