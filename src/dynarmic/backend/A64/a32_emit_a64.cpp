@@ -500,13 +500,6 @@ void A32EmitA64::EmitA32SetCpsrNZCVQ(A32EmitContext& ctx, IR::Inst* inst) {
     code._MSR(FIELD_FPSR, host_fpsr);
 }
 
-void A32EmitA64::EmitA32GetNFlag(A32EmitContext& ctx, IR::Inst* inst) {
-    Arm64Gen::ARM64Reg result = DecodeReg(ctx.reg_alloc.ScratchGpr());
-    code.LDR(INDEX_UNSIGNED, result, X28, offsetof(A32JitState, cpsr_nzcv));
-    code.UBFX(result, result, 31, 1);
-    ctx.reg_alloc.DefineValue(inst, result);
-}
-
 void A32EmitA64::EmitA32SetNFlag(A32EmitContext& ctx, IR::Inst* inst) {
     constexpr size_t flag_bit = 31;
     constexpr u32 flag_mask = 1u << flag_bit;
@@ -526,13 +519,6 @@ void A32EmitA64::EmitA32SetNFlag(A32EmitContext& ctx, IR::Inst* inst) {
         code.BFI(nzcv, to_store, flag_bit, 1);
     }
     code.STR(INDEX_UNSIGNED, nzcv, X28, offsetof(A32JitState, cpsr_nzcv));
-}
-
-void A32EmitA64::EmitA32GetZFlag(A32EmitContext& ctx, IR::Inst* inst) {
-    Arm64Gen::ARM64Reg result = DecodeReg(ctx.reg_alloc.ScratchGpr());
-    code.LDR(INDEX_UNSIGNED, result, X28, offsetof(A32JitState, cpsr_nzcv));
-    code.UBFX(result, result, 30, 1);
-    ctx.reg_alloc.DefineValue(inst, result);
 }
 
 void A32EmitA64::EmitA32SetZFlag(A32EmitContext& ctx, IR::Inst* inst) {
@@ -587,13 +573,6 @@ void A32EmitA64::EmitA32SetCFlag(A32EmitContext& ctx, IR::Inst* inst) {
         code.BFI(nzcv, to_store, flag_bit, 1);
     }
     code.STR(INDEX_UNSIGNED, nzcv, X28, offsetof(A32JitState, cpsr_nzcv));
-}
-
-void A32EmitA64::EmitA32GetVFlag(A32EmitContext& ctx, IR::Inst* inst) {
-    Arm64Gen::ARM64Reg result = DecodeReg(ctx.reg_alloc.ScratchGpr());
-    code.LDR(INDEX_UNSIGNED, result, X28, offsetof(A32JitState, cpsr_nzcv));
-    code.UBFX(result, result, 28, 1);
-    ctx.reg_alloc.DefineValue(inst, result);
 }
 
 void A32EmitA64::EmitA32SetVFlag(A32EmitContext& ctx, IR::Inst* inst) {
@@ -806,17 +785,6 @@ void A32EmitA64::EmitA32SetFpscrNZCV(A32EmitContext& ctx, IR::Inst* inst) {
 
 void A32EmitA64::EmitA32ClearExclusive(A32EmitContext&, IR::Inst*) {
     code.STR(INDEX_UNSIGNED, WZR, X28, offsetof(A32JitState, exclusive_state));
-}
-
-void A32EmitA64::EmitA32SetExclusive(A32EmitContext& ctx, IR::Inst* inst) {
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ASSERT(args[1].IsImmediate());
-    Arm64Gen::ARM64Reg address = DecodeReg(ctx.reg_alloc.UseGpr(args[0]));
-    Arm64Gen::ARM64Reg state = DecodeReg(ctx.reg_alloc.ScratchGpr());
-
-    code.MOVI2R(state, u8(1));
-    code.STR(INDEX_UNSIGNED, state, X28, offsetof(A32JitState, exclusive_state));
-    code.STR(INDEX_UNSIGNED, address, X28, offsetof(A32JitState, exclusive_address));
 }
 
 A32EmitA64::DoNotFastmemMarker A32EmitA64::GenerateDoNotFastmemMarker(A32EmitContext& ctx, IR::Inst* inst) {
