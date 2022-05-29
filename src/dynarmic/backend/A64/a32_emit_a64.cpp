@@ -62,6 +62,10 @@ A32::LocationDescriptor A32EmitContext::Location() const {
     return A32::LocationDescriptor{block.Location()};
 }
 
+A32::LocationDescriptor A32EmitContext::EndLocation() const {
+    return A32::LocationDescriptor{block.EndLocation()};
+}
+
 bool A32EmitContext::IsSingleStep() const {
     return A32::LocationDescriptor{block.Location()}.SingleStepping();
 }
@@ -697,6 +701,15 @@ void A32EmitA64::EmitA32BXWritePC(A32EmitContext& ctx, IR::Inst* inst) {
         code.AND(new_pc, new_pc, mask);
         code.STR(INDEX_UNSIGNED, new_pc, X28, MJitStateReg(A32::Reg::PC));
     }
+}
+
+void A32EmitA64::EmitA32UpdateUpperLocationDescriptor(A32EmitContext& ctx, IR::Inst*) {
+    for (auto& inst : ctx.block) {
+        if (inst.GetOpcode() == IR::Opcode::A32BXWritePC) {
+            return;
+        }
+    }
+    EmitSetUpperLocationDescriptor(ctx.EndLocation(), ctx.Location());
 }
 
 void A32EmitA64::EmitA32CallSupervisor(A32EmitContext& ctx, IR::Inst* inst) {

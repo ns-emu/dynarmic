@@ -30,6 +30,7 @@ class RegAlloc;
 struct A32EmitContext final : public EmitContext {
     A32EmitContext(RegAlloc& reg_alloc, IR::Block& block);
     A32::LocationDescriptor Location() const;
+    A32::LocationDescriptor EndLocation() const;
     bool IsSingleStep() const;
     FP::RoundingMode FPSCR_RMode() const override;
     u32 FPCR() const override;
