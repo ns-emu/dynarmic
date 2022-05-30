@@ -468,4 +468,4 @@ void EmitA64::EmitPackedSelect(EmitContext& ctx, IR::Inst* inst) {
     ctx.reg_alloc.DefineValue(inst, ge);
 }
 
-} // namespace Dynarmic::BackendA64
+}  // namespace Dynarmic::BackendA64

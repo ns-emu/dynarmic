@@ -4,16 +4,17 @@
  * General Public License version 2 or any later version.
  */
 
+#include "dynarmic/backend/A64/emit_a64.h"
+
 #include <unordered_map>
 #include <unordered_set>
 
 #include <mcl/assert.hpp>
 #include <mcl/bit/bit_field.hpp>
-#include <mcl/stdint.hpp>
 #include <mcl/scope_exit.hpp>
+#include <mcl/stdint.hpp>
 
 #include "dynarmic/backend/A64/block_of_code.h"
-#include "dynarmic/backend/A64/emit_a64.h"
 #include "dynarmic/backend/A64/hostloc.h"
 #include "dynarmic/backend/A64/perf_map.h"
 #include "dynarmic/backend/A64/reg_alloc.h"
@@ -28,7 +29,7 @@
 namespace Dynarmic::BackendA64 {
 
 EmitContext::EmitContext(RegAlloc& reg_alloc, IR::Block& block)
-    : reg_alloc(reg_alloc), block(block) {}
+        : reg_alloc(reg_alloc), block(block) {}
 
 void EmitContext::EraseInstruction(IR::Inst* inst) {
     block.Instructions().erase(inst);
@@ -36,7 +37,7 @@ void EmitContext::EraseInstruction(IR::Inst* inst) {
 }
 
 EmitA64::EmitA64(BlockOfCode& code)
-    : code(code) {}
+        : code(code) {}
 
 EmitA64::~EmitA64() = default;
 
@@ -64,8 +65,8 @@ void EmitA64::EmitIdentity(EmitContext& ctx, IR::Inst* inst) {
 void EmitA64::PushRSBHelper(ARM64Reg loc_desc_reg, ARM64Reg index_reg, IR::LocationDescriptor target) {
     auto iter = block_descriptors.find(target);
     CodePtr target_code_ptr = iter != block_descriptors.end()
-                            ? iter->second.entrypoint
-                            : code.GetReturnFromRunCodeAddress();
+                                ? iter->second.entrypoint
+                                : code.GetReturnFromRunCodeAddress();
 
     code.LDR(INDEX_UNSIGNED, DecodeReg(index_reg), X28, code.GetJitStateInfo().offsetof_rsb_ptr);
 
@@ -80,7 +81,7 @@ void EmitA64::PushRSBHelper(ARM64Reg loc_desc_reg, ARM64Reg index_reg, IR::Locat
 
     code.ADDI2R(DecodeReg(index_reg), DecodeReg(index_reg), 1);
     code.ANDI2R(DecodeReg(index_reg), DecodeReg(index_reg), code.GetJitStateInfo().rsb_ptr_mask, code.ABI_SCRATCH1);
-    code.STR(INDEX_UNSIGNED, DecodeReg(index_reg), X28, code.GetJitStateInfo().offsetof_rsb_ptr);        
+    code.STR(INDEX_UNSIGNED, DecodeReg(index_reg), X28, code.GetJitStateInfo().offsetof_rsb_ptr);
 }
 
 void EmitA64::EmitPushRSB(EmitContext& ctx, IR::Inst* inst) {
@@ -162,28 +163,28 @@ FixupBranch EmitA64::EmitCond(IR::Cond cond) {
     code._MSR(FIELD_NZCV, cpsr);
 
     switch (cond) {
-    case IR::Cond::EQ: //z
+    case IR::Cond::EQ:  //z
         label = code.B(CC_EQ);
         break;
-    case IR::Cond::NE: //!z
+    case IR::Cond::NE:  //!z
         label = code.B(CC_NEQ);
         break;
-    case IR::Cond::CS: //c
+    case IR::Cond::CS:  //c
         label = code.B(CC_CS);
         break;
-    case IR::Cond::CC: //!c
+    case IR::Cond::CC:  //!c
         label = code.B(CC_CC);
         break;
-    case IR::Cond::MI: //n
+    case IR::Cond::MI:  //n
         label = code.B(CC_MI);
         break;
-    case IR::Cond::PL: //!n
+    case IR::Cond::PL:  //!n
         label = code.B(CC_PL);
         break;
-    case IR::Cond::VS: //v
+    case IR::Cond::VS:  //v
         label = code.B(CC_VS);
         break;
-    case IR::Cond::VC: //!v
+    case IR::Cond::VC:  //!v
         label = code.B(CC_VC);
         break;
     case IR::Cond::HI:  //c & !z
@@ -203,7 +204,7 @@ FixupBranch EmitA64::EmitCond(IR::Cond cond) {
         break;
     case IR::Cond::LE:  // z | (n != v)
         label = code.B(CC_LE);
-        break;    
+        break;
     default:
         ASSERT_MSG(false, "Unknown cond {}", static_cast<size_t>(cond));
         break;
@@ -278,7 +279,7 @@ void EmitA64::InvalidateBasicBlocks(const std::unordered_set<IR::LocationDescrip
     code.EnableWriting();
     SCOPE_EXIT { code.DisableWriting(); };
 
-    for (const auto &descriptor : locations) {
+    for (const auto& descriptor : locations) {
         auto it = block_descriptors.find(descriptor);
         if (it == block_descriptors.end()) {
             continue;
@@ -291,4 +292,4 @@ void EmitA64::InvalidateBasicBlocks(const std::unordered_set<IR::LocationDescrip
     }
 }
 
-} // namespace Dynarmic::BackendA64
+}  // namespace Dynarmic::BackendA64

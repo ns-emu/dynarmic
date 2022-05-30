@@ -23,7 +23,7 @@ constexpr HostLoc ABI_PARAM6 = HostLoc::X5;
 constexpr HostLoc ABI_PARAM7 = HostLoc::X6;
 constexpr HostLoc ABI_PARAM8 = HostLoc::X7;
 
-constexpr std::array<HostLoc, 43> ABI_ALL_CALLER_SAVE = {  
+constexpr std::array<HostLoc, 43> ABI_ALL_CALLER_SAVE = {
     HostLoc::X0,
     HostLoc::X1,
     HostLoc::X2,
@@ -52,7 +52,7 @@ constexpr std::array<HostLoc, 43> ABI_ALL_CALLER_SAVE = {
     HostLoc::Q5,
     HostLoc::Q6,
     HostLoc::Q7,
-   
+
     HostLoc::Q16,
     HostLoc::Q17,
     HostLoc::Q18,
@@ -95,7 +95,7 @@ constexpr std::array<HostLoc, 20> ABI_ALL_CALLEE_SAVE = {
     HostLoc::Q15,
 };
 
-constexpr size_t ABI_SHADOW_SPACE = 0; // bytes
+constexpr size_t ABI_SHADOW_SPACE = 0;  // bytes
 
 static_assert(ABI_ALL_CALLER_SAVE.size() + ABI_ALL_CALLEE_SAVE.size() == 63, "Invalid total number of registers");
 
@@ -107,4 +107,4 @@ void ABI_PopCallerSaveRegistersAndAdjustStack(BlockOfCode& code);
 void ABI_PushCallerSaveRegistersAndAdjustStackExcept(BlockOfCode& code, HostLoc exception);
 void ABI_PopCallerSaveRegistersAndAdjustStackExcept(BlockOfCode& code, HostLoc exception);
 
-} // namespace Dynarmic::BackendX64
+}  // namespace Dynarmic::BackendA64

@@ -22,4 +22,4 @@ bool ExceptionHandler::SupportsFastmem() const {
     return false;
 }
 
-} // namespace Dynarmic::BackendA64
+}  // namespace Dynarmic::BackendA64

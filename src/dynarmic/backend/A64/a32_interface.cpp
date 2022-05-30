@@ -7,13 +7,12 @@
 #include <memory>
 
 #include <boost/icl/interval_set.hpp>
-#include <fmt/format.h>
-#include <mcl/assert.hpp>
-#include <mcl/stdint.hpp>
-#include <mcl/scope_exit.hpp>
-
 #include <dynarmic/interface/A32/a32.h>
 #include <dynarmic/interface/A32/context.h>
+#include <fmt/format.h>
+#include <mcl/assert.hpp>
+#include <mcl/scope_exit.hpp>
+#include <mcl/stdint.hpp>
 
 #include "dynarmic/backend/A64/a32_emit_a64.h"
 #include "dynarmic/backend/A64/a32_jitstate.h"
@@ -21,12 +20,12 @@
 #include "dynarmic/backend/A64/callback.h"
 #include "dynarmic/backend/A64/devirtualize.h"
 #include "dynarmic/backend/A64/jitstate_info.h"
+#include "dynarmic/common/atomic.h"
 #include "dynarmic/common/llvm_disassemble.h"
 #include "dynarmic/frontend/A32/translate/a32_translate.h"
 #include "dynarmic/ir/basic_block.h"
 #include "dynarmic/ir/location_descriptor.h"
 #include "dynarmic/ir/opt/passes.h"
-#include "dynarmic/common/atomic.h"
 
 namespace Dynarmic::A32 {
 
@@ -46,8 +45,7 @@ struct Jit::Impl {
             : block_of_code(GenRunCodeCallbacks(config, &GetCurrentBlockThunk, this), JitStateInfo{jit_state})
             , emitter(block_of_code, config, jit)
             , config(std::move(config))
-            , jit_interface(jit)
-    {}
+            , jit_interface(jit) {}
 
     A32JitState jit_state;
     BlockOfCode block_of_code;
@@ -61,7 +59,7 @@ struct Jit::Impl {
     bool invalidate_entire_cache = false;
 
     HaltReason Execute() {
-        const CodePtr current_codeptr = [this]{
+        const CodePtr current_codeptr = [this] {
             // RSB optimization
             const u32 new_rsb_ptr = (jit_state.rsb_ptr - 1) & A32JitState::RSBPtrMask;
             if (jit_state.GetUniqueHash() == jit_state.rsb_location_descriptors[new_rsb_ptr]) {
@@ -91,7 +89,7 @@ struct Jit::Impl {
              reinterpret_cast<const u8*>(pos) < reinterpret_cast<const u8*>(block.entrypoint) + block.size; pos += 1) {
             fmt::print("0x{:02x} 0x{:02x} ", reinterpret_cast<u64>(pos), *pos);
             fmt::print("{}", Common::DisassembleAArch64(*pos, reinterpret_cast<u64>(pos)));
-            result += Common::DisassembleAArch64(*pos, reinterpret_cast<u64>(pos));        
+            result += Common::DisassembleAArch64(*pos, reinterpret_cast<u64>(pos));
         }
 #endif
         return result;
@@ -174,7 +172,8 @@ private:
     }
 };
 
-Jit::Jit(UserConfig config) : impl(std::make_unique<Impl>(this, std::move(config))) {}
+Jit::Jit(UserConfig config)
+        : impl(std::make_unique<Impl>(this, std::move(config))) {}
 
 Jit::~Jit() = default;
 
@@ -263,10 +262,15 @@ struct Context::Impl {
     size_t invalid_cache_generation;
 };
 
-Context::Context() : impl(std::make_unique<Context::Impl>()) { impl->jit_state.ResetRSB(); }
+Context::Context()
+        : impl(std::make_unique<Context::Impl>()) {
+    impl->jit_state.ResetRSB();
+}
 Context::~Context() = default;
-Context::Context(const Context& ctx) : impl(std::make_unique<Context::Impl>(*ctx.impl)) {}
-Context::Context(Context&& ctx) noexcept : impl(std::move(ctx.impl)) {}
+Context::Context(const Context& ctx)
+        : impl(std::make_unique<Context::Impl>(*ctx.impl)) {}
+Context::Context(Context&& ctx) noexcept
+        : impl(std::move(ctx.impl)) {}
 Context& Context::operator=(const Context& ctx) {
     *impl = *ctx.impl;
     return *this;
@@ -326,4 +330,4 @@ std::vector<std::string> Jit::Disassemble() const {
     return result;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

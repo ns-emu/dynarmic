@@ -14,18 +14,18 @@
 
 // 20th Sep 2018: This code was modified for Dynarmic.
 
+#include "dynarmic/backend/A64/abi.h"
+
 #include <algorithm>
 #include <vector>
 
-#include <mcl/stdint.hpp> 
-
-#include "dynarmic/backend/A64/abi.h"
+#include <mcl/stdint.hpp>
 
 namespace Dynarmic::BackendA64 {
 
 template<typename RegisterArrayT>
 void ABI_PushRegistersAndAdjustStack(BlockOfCode& code, const RegisterArrayT& regs) {
-    u32 gprs = 0 , fprs = 0;
+    u32 gprs = 0, fprs = 0;
 
     for (HostLoc reg : regs) {
         if (HostLocIsGPR(reg)) {
@@ -83,4 +83,4 @@ void ABI_PopCallerSaveRegistersAndAdjustStackExcept(BlockOfCode& code, HostLoc e
     ABI_PopRegistersAndAdjustStack(code, regs);
 }
 
-} // namespace Dynarmic::BackendX64
+}  // namespace Dynarmic::BackendA64

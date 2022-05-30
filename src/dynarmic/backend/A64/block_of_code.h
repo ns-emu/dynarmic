@@ -14,8 +14,8 @@
 
 #include "dynarmic/backend/A64/callback.h"
 #include "dynarmic/backend/A64/constant_pool.h"
-#include "dynarmic/backend/A64/jitstate_info.h"
 #include "dynarmic/backend/A64/emitter/a64_emitter.h"
+#include "dynarmic/backend/A64/jitstate_info.h"
 #include "dynarmic/interface/halt_reason.h"
 
 namespace Dynarmic::BackendA64 {
@@ -33,7 +33,6 @@ class BlockOfCode final : public Arm64Gen::ARM64CodeBlock {
 public:
     BlockOfCode(RunCodeCallbacks cb, JitStateInfo jsi);
     BlockOfCode(const BlockOfCode&) = delete;
-
 
     /// Call when external emitters have finished emitting their preludes.
     void PreludeComplete();
@@ -146,4 +145,4 @@ private:
     //Xbyak::util::Cpu cpu_info;
 };
 
-} // namespace Dynarmic::BackendA64
+}  // namespace Dynarmic::BackendA64

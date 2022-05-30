@@ -9,14 +9,14 @@
 
 #ifdef __linux__
 
-#include <cstdio>
-#include <cstdlib>
-#include <mutex>
-#include <sys/types.h>
-#include <unistd.h>
+#    include <cstdio>
+#    include <cstdlib>
+#    include <mutex>
 
-#include <fmt/format.h>
-#include <mcl/stdint.hpp>
+#    include <fmt/format.h>
+#    include <mcl/stdint.hpp>
+#    include <sys/types.h>
+#    include <unistd.h>
 
 namespace Dynarmic::BackendA64 {
 
@@ -41,7 +41,7 @@ void OpenFile() {
 
     std::setvbuf(file, nullptr, _IONBF, 0);
 }
-} // anonymous namespace
+}  // anonymous namespace
 
 namespace detail {
 void PerfMapRegister(const void* start, const void* end, const std::string& friendly_name) {
@@ -57,7 +57,7 @@ void PerfMapRegister(const void* start, const void* end, const std::string& frie
     const std::string line = fmt::format("{:016x} {:016x} {:s}\n", reinterpret_cast<u64>(start), reinterpret_cast<u64>(end) - reinterpret_cast<u64>(start), friendly_name);
     std::fwrite(line.data(), sizeof *line.data(), line.size(), file);
 }
-} // namespace detail
+}  // namespace detail
 
 void PerfMapClear() {
     std::lock_guard guard{mutex};
@@ -71,7 +71,7 @@ void PerfMapClear() {
     OpenFile();
 }
 
-} // namespace Dynarmic::BackendX64
+}  // namespace Dynarmic::BackendA64
 
 #else
 
@@ -79,10 +79,10 @@ namespace Dynarmic::BackendA64 {
 
 namespace detail {
 void PerfMapRegister(const void*, const void*, const std::string&) {}
-} // namespace detail
+}  // namespace detail
 
 void PerfMapClear() {}
 
-} // namespace Dynarmic::BackendX64
+}  // namespace Dynarmic::BackendA64
 
 #endif

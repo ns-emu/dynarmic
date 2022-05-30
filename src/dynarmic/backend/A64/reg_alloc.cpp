@@ -4,6 +4,8 @@
  * General Public License version 2 or any later version.
  */
 
+#include "dynarmic/backend/A64/reg_alloc.h"
+
 #include <algorithm>
 #include <numeric>
 #include <utility>
@@ -12,7 +14,6 @@
 #include <mcl/assert.hpp>
 
 #include "dynarmic/backend/A64/abi.h"
-#include "dynarmic/backend/A64/reg_alloc.h"
 
 namespace Dynarmic::BackendA64 {
 
@@ -67,7 +68,7 @@ static size_t GetBitWidth(IR::Type type) {
     case IR::Type::U128:
         return 128;
     case IR::Type::NZCVFlags:
-        return 32; // TODO: Update to 16 when flags optimization is done
+        return 32;  // TODO: Update to 16 when flags optimization is done
     }
     UNREACHABLE();
     return 0;
@@ -379,16 +380,9 @@ HostLoc RegAlloc::ScratchImpl(HostLocList desired_locations) {
     return location;
 }
 
-void RegAlloc::HostCall(IR::Inst* result_def, std::optional<Argument::copyable_reference> arg0, 
-                        std::optional<Argument::copyable_reference> arg1,
-                        std::optional<Argument::copyable_reference> arg2, 
-                        std::optional<Argument::copyable_reference> arg3, 
-                        std::optional<Argument::copyable_reference> arg4, 
-                        std::optional<Argument::copyable_reference> arg5, 
-                        std::optional<Argument::copyable_reference> arg6, 
-                        std::optional<Argument::copyable_reference> arg7) {
+void RegAlloc::HostCall(IR::Inst* result_def, std::optional<Argument::copyable_reference> arg0, std::optional<Argument::copyable_reference> arg1, std::optional<Argument::copyable_reference> arg2, std::optional<Argument::copyable_reference> arg3, std::optional<Argument::copyable_reference> arg4, std::optional<Argument::copyable_reference> arg5, std::optional<Argument::copyable_reference> arg6, std::optional<Argument::copyable_reference> arg7) {
     constexpr size_t args_count = 8;
-    constexpr std::array<HostLoc, args_count> args_hostloc = { ABI_PARAM1, ABI_PARAM2, ABI_PARAM3, ABI_PARAM4, ABI_PARAM5, ABI_PARAM6, ABI_PARAM7, ABI_PARAM8 };
+    constexpr std::array<HostLoc, args_count> args_hostloc = {ABI_PARAM1, ABI_PARAM2, ABI_PARAM3, ABI_PARAM4, ABI_PARAM5, ABI_PARAM6, ABI_PARAM7, ABI_PARAM8};
     const std::array<std::optional<Argument::copyable_reference>, args_count> args = {arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7};
 
     static const std::vector<HostLoc> other_caller_save = [args_hostloc]() {
@@ -417,7 +411,7 @@ void RegAlloc::HostCall(IR::Inst* result_def, std::optional<Argument::copyable_r
         ScratchImpl({caller_saved});
     }
 
-     if (result_def) {
+    if (result_def) {
         DefineValueImpl(result_def, ABI_RETURN);
     }
 }
@@ -433,10 +427,10 @@ void RegAlloc::AssertNoMoreUses() {
 }
 
 HostLoc RegAlloc::SelectARegister(HostLocList desired_locations) const {
-     std::vector<HostLoc> candidates = desired_locations;
+    std::vector<HostLoc> candidates = desired_locations;
 
     // Find all locations that have not been allocated..
-    const auto allocated_locs = std::partition(candidates.begin(), candidates.end(), [this](auto loc){
+    const auto allocated_locs = std::partition(candidates.begin(), candidates.end(), [this](auto loc) {
         return !this->LocInfo(loc).IsLocked();
     });
     candidates.erase(allocated_locs, candidates.end());
@@ -445,7 +439,7 @@ HostLoc RegAlloc::SelectARegister(HostLocList desired_locations) const {
     // Selects the best location out of the available locations.
     // TODO: Actually do LRU or something. Currently we just try to pick something without a value if possible.
 
-    std::partition(candidates.begin(), candidates.end(), [this](auto loc){
+    std::partition(candidates.begin(), candidates.end(), [this](auto loc) {
         return this->LocInfo(loc).IsEmpty();
     });
 
@@ -648,4 +642,4 @@ void RegAlloc::EmitExchange(HostLoc a, HostLoc b) {
     }
 }
 
-} // namespace Dynarmic::BackendA64
+}  // namespace Dynarmic::BackendA64

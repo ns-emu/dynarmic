@@ -7,6 +7,7 @@
 #pragma once
 
 #include <array>
+
 #include <mcl/stdint.hpp>
 
 namespace Dynarmic::BackendA64 {
@@ -14,8 +15,8 @@ namespace Dynarmic::BackendA64 {
 class BlockOfCode;
 
 #ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4324) // Structure was padded due to alignment specifier
+#    pragma warning(push)
+#    pragma warning(disable : 4324)  // Structure was padded due to alignment specifier
 #endif
 
 struct A32JitState {
@@ -23,7 +24,7 @@ struct A32JitState {
 
     A32JitState() { ResetRSB(); }
 
-    std::array<u32, 16> Reg{}; // Current register file.
+    std::array<u32, 16> Reg{};  // Current register file.
     // TODO: Mode-specific register sets unimplemented.
 
     u32 upper_location_descriptor = 0;
@@ -35,10 +36,10 @@ struct A32JitState {
     u32 Cpsr() const;
     void SetCpsr(u32 cpsr);
 
-    alignas(u64) std::array<u32, 64> ExtReg{}; // Extension registers.
+    alignas(u64) std::array<u32, 64> ExtReg{};  // Extension registers.
 
     static constexpr size_t SpillCount = 64;
-    std::array<u64, SpillCount> Spill{}; // Spill.
+    std::array<u64, SpillCount> Spill{};  // Spill.
     static size_t GetSpillLocationOffsetFromIndex(size_t i) {
         return static_cast<u64>(offsetof(A32JitState, Spill) + i * sizeof(u64));
     }
@@ -57,7 +58,7 @@ struct A32JitState {
     u32 exclusive_state = 0;
     u32 exclusive_address = 0;
 
-    static constexpr size_t RSBSize = 8; // MUST be a power of 2.
+    static constexpr size_t RSBSize = 8;  // MUST be a power of 2.
     static constexpr size_t RSBPtrMask = RSBSize - 1;
     u32 rsb_ptr = 0;
     std::array<u64, RSBSize> rsb_location_descriptors;
@@ -65,7 +66,7 @@ struct A32JitState {
     void ResetRSB();
 
     u32 fpsr_exc = 0;
-    u32 fpsr_qc = 0; // Dummy value
+    u32 fpsr_qc = 0;  // Dummy value
     u32 fpsr_nzcv = 0;
     u32 Fpscr() const;
     void SetFpscr(u32 FPSCR);
@@ -102,9 +103,9 @@ struct A32JitState {
 };
 
 #ifdef _MSC_VER
-#pragma warning(pop)
+#    pragma warning(pop)
 #endif
 
 using CodePtr = const void*;
 
-} // namespace Dynarmic::BackendA64
+}  // namespace Dynarmic::BackendA64

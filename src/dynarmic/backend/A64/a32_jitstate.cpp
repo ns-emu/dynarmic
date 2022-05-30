@@ -4,11 +4,12 @@
  * General Public License version 2 or any later version.
  */
 
+#include "dynarmic/backend/A64/a32_jitstate.h"
+
 #include <mcl/assert.hpp>
 #include <mcl/bit_cast.hpp>
 #include <mcl/stdint.hpp>
 
-#include "dynarmic/backend/A64/a32_jitstate.h"
 #include "dynarmic/backend/A64/block_of_code.h"
 #include "dynarmic/frontend/A32/a32_location_descriptor.h"
 
@@ -89,7 +90,7 @@ void A32JitState::SetCpsr(u32 cpsr) {
     upper_location_descriptor |= mcl::bit::get_bit<9>(cpsr) ? 2 : 0;
     upper_location_descriptor |= mcl::bit::get_bit<5>(cpsr) ? 1 : 0;
     // IT state
-    upper_location_descriptor |= (cpsr >>  0) & 0b11111100'00000000;
+    upper_location_descriptor |= (cpsr >> 0) & 0b11111100'00000000;
     upper_location_descriptor |= (cpsr >> 17) & 0b00000011'00000000;
 
     // Other flags
@@ -170,4 +171,4 @@ void A32JitState::SetFpscr(u32 FPSCR) {
     guest_fpsr |= FPSCR & 0x9F;
 }
 
-} // namespace Dynarmic::BackendA64
+}  // namespace Dynarmic::BackendA64

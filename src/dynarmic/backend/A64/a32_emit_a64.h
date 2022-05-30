@@ -17,9 +17,9 @@
 #include "dynarmic/backend/A64/block_range_information.h"
 #include "dynarmic/backend/A64/emit_a64.h"
 #include "dynarmic/backend/A64/exception_handler.h"
+#include "dynarmic/frontend/A32/a32_location_descriptor.h"
 #include "dynarmic/interface/A32/a32.h"
 #include "dynarmic/interface/A32/config.h"
-#include "dynarmic/frontend/A32/a32_location_descriptor.h"
 #include "dynarmic/ir/terminal.h"
 
 namespace Dynarmic::BackendA64 {
@@ -137,4 +137,4 @@ protected:
     void EmitPatchMovX0(CodePtr target_code_ptr = nullptr) override;
 };
 
-} // namespace Dynarmic::BackendA64
+}  // namespace Dynarmic::BackendA64

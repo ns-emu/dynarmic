@@ -8,9 +8,9 @@
 #include <vector>
 
 #ifdef _WIN32
-#include <windows.h>
+#    include <windows.h>
 #else
-#include <sys/mman.h>
+#    include <sys/mman.h>
 #endif
 
 #include <mcl/assert.hpp>
@@ -21,7 +21,7 @@ namespace Dynarmic::BackendA64 {
 // You get memory management for free, plus, you can use all emitter functions
 // without having to prefix them with gen-> or something similar. Example
 // implementation: class JIT : public CodeBlock<ARMXEmitter> {}
-template <class T>
+template<class T>
 class CodeBlock : public T {
 private:
     // A privately used function to set the executable RAM space to something
@@ -57,11 +57,11 @@ public:
 #if defined(_WIN32)
         void* ptr = VirtualAlloc(nullptr, size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 #else
-#if defined(__APPLE__)
+#    if defined(__APPLE__)
         void* ptr = mmap(nullptr, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANON | MAP_PRIVATE | MAP_JIT, -1, 0);
-#else
+#    else
         void* ptr = mmap(nullptr, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANON | MAP_PRIVATE, -1, 0);
-#endif
+#    endif
 
         if (ptr == MAP_FAILED)
             ptr = nullptr;
@@ -137,4 +137,4 @@ public:
         m_children.emplace_back(child);
     }
 };
-} // namespace Dynarmic::BackendA64
+}  // namespace Dynarmic::BackendA64

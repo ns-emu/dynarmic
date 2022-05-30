@@ -4,22 +4,24 @@
  * General Public License version 2 or any later version.
  */
 
+#include "dynarmic/backend/A64/constant_pool.h"
+
 #include <cstring>
 
 #include <mcl/assert.hpp>
 
 #include "dynarmic/backend/A64/block_of_code.h"
-#include "dynarmic/backend/A64/constant_pool.h"
 
 namespace Dynarmic::BackendA64 {
 
-ConstantPool::ConstantPool(BlockOfCode& code) : code(code) {}
+ConstantPool::ConstantPool(BlockOfCode& code)
+        : code(code) {}
 
 void ConstantPool::EmitPatchLDR(Arm64Gen::ARM64Reg Rt, u64 lower, u64 upper) {
     const auto constant = std::make_tuple(lower, upper);
     auto iter = constant_info.find(constant);
     if (iter == constant_info.end()) {
-        struct PatchInfo p = { code.GetCodePtr(), Rt, constant };
+        struct PatchInfo p = {code.GetCodePtr(), Rt, constant};
         patch_info.emplace_back(p);
         code.BRK(0);
         return;
@@ -29,7 +31,7 @@ void ConstantPool::EmitPatchLDR(Arm64Gen::ARM64Reg Rt, u64 lower, u64 upper) {
 
     if (!(offset >= -0x40000 && offset <= 0x3FFFF)) {
         constant_info.erase(constant);
-        struct PatchInfo p = { code.GetCodePtr(), Rt, constant };
+        struct PatchInfo p = {code.GetCodePtr(), Rt, constant};
         patch_info.emplace_back(p);
         code.BRK(0x42);
         return;
@@ -58,9 +60,9 @@ void ConstantPool::PatchPool() {
     code.SetCodePtr(pool_ptr);
 }
 
-void  ConstantPool::Clear() {
+void ConstantPool::Clear() {
     constant_info.clear();
     patch_info.clear();
 }
 
-} // namespace Dynarmic::BackendA64
+}  // namespace Dynarmic::BackendA64

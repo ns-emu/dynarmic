@@ -5,6 +5,7 @@
  */
 
 #include "dynarmic/backend/A64/callback.h"
+
 #include "dynarmic/backend/A64/block_of_code.h"
 
 namespace Dynarmic::BackendA64 {
@@ -38,4 +39,4 @@ void ArgCallback::EmitCallWithReturnPointer(BlockOfCode& code, std::function<voi
     code.QuickCallFunction(fn);
 }
 
-} // namespace Dynarmic::BackendX64
+}  // namespace Dynarmic::BackendA64
