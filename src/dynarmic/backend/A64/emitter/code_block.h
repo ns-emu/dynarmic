@@ -82,7 +82,13 @@ public:
     // it'll do the job.
     void FreeCodeSpace() {
         ASSERT(!m_is_child);
-        ASSERT(munmap(region, total_region_size) == 0);
+        if (region) {
+#ifdef _WIN32
+            ASSERT(VirtualFree(region, 0, MEM_RELEASE));
+#else
+            ASSERT(munmap(region, total_region_size) == 0);
+#endif
+        }
         region = nullptr;
         region_size = 0;
         total_region_size = 0;
@@ -96,12 +102,7 @@ public:
     bool IsInSpace(const u8* ptr) const {
         return ptr >= region && ptr < (region + region_size);
     }
-    // Cannot currently be undone. Will write protect the entire code region.
-    // Start over if you need to change the code (call FreeCodeSpace(),
-    // AllocCodeSpace()).
-    void WriteProtect() {
-        ASSERT(mprotect(region, region_size, PROT_READ | PROT_EXEC) != 0);
-    }
+
     void ResetCodePtr() {
         T::SetCodePtr(region);
     }

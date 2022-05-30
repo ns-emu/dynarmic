@@ -8,10 +8,6 @@
 #include <cstring>
 #include <vector>
 
-#if defined(__APPLE__)
-#include <libkern/OSCacheControl.h>
-#endif
-
 #include <mcl/assert.hpp>
 #include <mcl/bit_cast.hpp>
 #include <mcl/bit/bit_count.hpp>
@@ -19,6 +15,13 @@
 
 #include "a64_emitter.h"
 #include "dynarmic/common/math_util.h"
+
+#ifdef _WIN32
+#    include <Windows.h>
+#endif
+#ifdef __APPLE__
+#    include <libkern/OSCacheControl.h>
+#endif
 
 namespace Dynarmic::BackendA64::Arm64Gen {
 
@@ -37,6 +40,7 @@ int CountLeadingZeros(u64 value, int width) {
         return __builtin_clzll(value);
     }
 #endif
+
     // TODO(jbramley): Optimize this for ARM64 hosts.
     int count = 0;
     uint64_t bit_test = 1ULL << (width - 1);
@@ -367,10 +371,11 @@ void ARM64XEmitter::FlushIcacheSection(const u8* start, const u8* end) {
     if (start == end)
         return;
 
-#if defined(__APPLE__)
-    // Header file says this is equivalent to: sys_icache_invalidate(start, end -
-    // start);
+#if defined(IOS) || defined(__APPLE__)
+    // Header file says this is equivalent to: sys_icache_invalidate(start, end - start);
     sys_cache_control(kCacheFunctionPrepareForExecution, const_cast<u8*>(start), end - start);
+#elif defined(WIN32)
+    FlushInstructionCache(GetCurrentProcess(), start, end - start);
 #else
     // Don't rely on GCC's __clear_cache implementation, as it caches
     // icache/dcache cache line sizes, that can vary between cores on
