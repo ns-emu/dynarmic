@@ -81,19 +81,6 @@ struct Jit::Impl {
         Atomic::Or(&jit_state.halt_reason, static_cast<u32>(hr));
     }
 
-    std::string Disassemble(const IR::LocationDescriptor& descriptor) {
-        auto block = GetBasicBlock(descriptor);
-        std::string result = fmt::format("address: {}\nsize: {} bytes\n", block.entrypoint, block.size);
-#ifdef DYNARMIC_USE_LLVM
-        for (const u32* pos = reinterpret_cast<const u32*>(block.entrypoint);
-             reinterpret_cast<const u8*>(pos) < reinterpret_cast<const u8*>(block.entrypoint) + block.size; pos += 1) {
-            fmt::print("0x{:02x} 0x{:02x} ", reinterpret_cast<u64>(pos), *pos);
-            fmt::print("{}", Common::DisassembleAArch64(*pos, reinterpret_cast<u64>(pos)));
-            result += Common::DisassembleAArch64(*pos, reinterpret_cast<u64>(pos));
-        }
-#endif
-        return result;
-    }
 
     void PerformCacheInvalidation() {
         if (invalidate_entire_cache) {
