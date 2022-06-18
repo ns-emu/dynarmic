@@ -399,7 +399,7 @@ elseif(ARCHITECTURE STREQUAL "arm64")
          backend/A64/emit_a64_saturation.cpp
          # backend/A64/emit_a64_sm4.cpp
          # backend/A64/emit_a64_vector.cpp
-         # backend/A64/emit_a64_vector_floating_point.cpp         
+         # backend/A64/emit_a64_vector_floating_point.cpp
          backend/A64/exception_handler.h
          backend/A64/hostloc.cpp
          backend/A64/hostloc.h
@@ -409,6 +409,10 @@ elseif(ARCHITECTURE STREQUAL "arm64")
          backend/A64/perf_map.h
          backend/A64/reg_alloc.cpp
          backend/A64/reg_alloc.h
+         backend/A64/exclusive_monitor.cpp 
+         backend/A64/exclusive_monitor_friend.h
+         backend/A64/spin_lock_arm64.h
+         backend/A64/spin_lock_arm64.cpp
     )
     
     if ("A32" IN_LIST DYNARMIC_FRONTENDS)

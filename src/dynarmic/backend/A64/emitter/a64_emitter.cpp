@@ -1532,6 +1532,7 @@ void ARM64XEmitter::STP(IndexType type, ARM64Reg Rt, ARM64Reg Rt2, ARM64Reg Rn, 
 }
 
 // Load/Store Exclusive
+// FIXME: most of these have swapped Rt and Rn which produces incorrect code gen
 void ARM64XEmitter::STXRB(ARM64Reg Rs, ARM64Reg Rt, ARM64Reg Rn) {
     EncodeLoadStoreExcInst(0, Rs, SP, Rt, Rn);
 }
@@ -1569,7 +1570,7 @@ void ARM64XEmitter::LDARH(ARM64Reg Rt, ARM64Reg Rn) {
     EncodeLoadStoreExcInst(11, SP, SP, Rt, Rn);
 }
 void ARM64XEmitter::STXR(ARM64Reg Rs, ARM64Reg Rt, ARM64Reg Rn) {
-    EncodeLoadStoreExcInst(12 + Is64Bit(Rt), Rs, SP, Rt, Rn);
+    EncodeLoadStoreExcInst(12 + Is64Bit(Rt), Rs, SP, Rn, Rt);
 }
 void ARM64XEmitter::STLXR(ARM64Reg Rs, ARM64Reg Rt, ARM64Reg Rn) {
     EncodeLoadStoreExcInst(14 + Is64Bit(Rt), Rs, SP, Rt, Rn);
@@ -1584,7 +1585,7 @@ void ARM64XEmitter::LDXR(ARM64Reg Rt, ARM64Reg Rn) {
     EncodeLoadStoreExcInst(20 + Is64Bit(Rt), SP, SP, Rt, Rn);
 }
 void ARM64XEmitter::LDAXR(ARM64Reg Rt, ARM64Reg Rn) {
-    EncodeLoadStoreExcInst(22 + Is64Bit(Rt), SP, SP, Rt, Rn);
+    EncodeLoadStoreExcInst(22 + Is64Bit(Rt), SP, SP, Rn, Rt);
 }
 void ARM64XEmitter::LDXP(ARM64Reg Rt, ARM64Reg Rt2, ARM64Reg Rn) {
     EncodeLoadStoreExcInst(24 + Is64Bit(Rt), SP, Rt2, Rt, Rn);
@@ -1593,7 +1594,7 @@ void ARM64XEmitter::LDAXP(ARM64Reg Rt, ARM64Reg Rt2, ARM64Reg Rn) {
     EncodeLoadStoreExcInst(26 + Is64Bit(Rt), SP, Rt2, Rt, Rn);
 }
 void ARM64XEmitter::STLR(ARM64Reg Rt, ARM64Reg Rn) {
-    EncodeLoadStoreExcInst(28 + Is64Bit(Rt), SP, SP, Rt, Rn);
+    EncodeLoadStoreExcInst(28 + Is64Bit(Rt), SP, SP, Rn, Rt);
 }
 void ARM64XEmitter::LDAR(ARM64Reg Rt, ARM64Reg Rn) {
     EncodeLoadStoreExcInst(30 + Is64Bit(Rt), SP, SP, Rt, Rn);

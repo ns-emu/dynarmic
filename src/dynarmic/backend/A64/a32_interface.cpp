@@ -81,6 +81,9 @@ struct Jit::Impl {
         Atomic::Or(&jit_state.halt_reason, static_cast<u32>(hr));
     }
 
+    void ClearExclusiveState() {
+        jit_state.exclusive_state = 0;
+    }
 
     void PerformCacheInvalidation() {
         if (invalidate_entire_cache) {
@@ -205,6 +208,10 @@ void Jit::Reset() {
 
 void Jit::HaltExecution(HaltReason hr) {
     impl->HaltExecution(hr);
+}
+
+void Jit::ClearExclusiveState() {
+    impl->ClearExclusiveState();
 }
 
 std::array<u32, 16>& Jit::Regs() {

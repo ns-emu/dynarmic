@@ -252,6 +252,9 @@ constexpr bool IsGPR(ARM64Reg reg) {
 constexpr ARM64Reg DecodeReg(ARM64Reg reg) {
     return static_cast<ARM64Reg>(reg & 0x1F);
 }
+constexpr ARM64Reg EncodeRegTo32(ARM64Reg reg) {
+    return static_cast<ARM64Reg>(reg & 0x1F);
+}
 constexpr ARM64Reg EncodeRegTo64(ARM64Reg reg) {
     return static_cast<ARM64Reg>(reg | 0x20);
 }
