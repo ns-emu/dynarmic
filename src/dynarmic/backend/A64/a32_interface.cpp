@@ -50,6 +50,7 @@ struct Jit::Impl {
     A32JitState jit_state;
     BlockOfCode block_of_code;
     A32EmitA64 emitter;
+    Optimization::PolyfillOptions polyfill_options;
 
     const A32::UserConfig config;
 
@@ -148,6 +149,7 @@ private:
         }
 
         IR::Block ir_block = A32::Translate(A32::LocationDescriptor{descriptor}, config.callbacks, {config.arch_version, config.define_unpredictable_behaviour, config.hook_hint_instructions});
+        Optimization::PolyfillPass(ir_block, polyfill_options);
         if (config.HasOptimization(OptimizationFlag::GetSetElimination)) {
             Optimization::A32GetSetElimination(ir_block);
             Optimization::DeadCodeElimination(ir_block);
