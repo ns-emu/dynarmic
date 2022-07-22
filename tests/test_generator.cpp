@@ -20,6 +20,7 @@
 #include "dynarmic/common/fp/fpsr.h"
 #include "dynarmic/frontend/A32/ITState.h"
 #include "dynarmic/frontend/A32/a32_location_descriptor.h"
+#include "dynarmic/frontend/A32/disassembler/disassembler.h"
 #include "dynarmic/frontend/A32/a32_types.h"
 #include "dynarmic/frontend/A32/translate/a32_translate.h"
 #include "dynarmic/interface/A32/a32.h"
@@ -158,19 +159,19 @@ std::vector<u16> GenRandomThumbInst(u32 pc, bool is_last_inst, A32::ITState it_s
         const std::vector<std::tuple<std::string, const char*>> list{
 #define INST(fn, name, bitstring) {#fn, bitstring},
 #include "dynarmic/frontend/A32/decoder/thumb16.inc"
-#include "dynarmic/frontend/A32/decoder/thumb32.inc"
+//#include "dynarmic/frontend/A32/decoder/thumb32.inc"
 #undef INST
         };
 
         const std::vector<std::tuple<std::string, const char*>> vfp_list{
 #define INST(fn, name, bitstring) {#fn, bitstring},
-#include "dynarmic/frontend/A32/decoder/vfp.inc"
+//#include "dynarmic/frontend/A32/decoder/vfp.inc"
 #undef INST
         };
 
         const std::vector<std::tuple<std::string, const char*>> asimd_list{
 #define INST(fn, name, bitstring) {#fn, bitstring},
-#include "dynarmic/frontend/A32/decoder/asimd.inc"
+//#include "dynarmic/frontend/A32/decoder/asimd.inc"
 #undef INST
         };
 
@@ -297,9 +298,9 @@ static void RunTestInstance(Dynarmic::A32::Jit& jit,
     fmt::print("instructions: ");
     for (auto instruction : instructions) {
         if constexpr (sizeof(decltype(instruction)) == 2) {
-            fmt::print("{:04x} ", instruction);
+            fmt::print("{:04x} {}", instruction, Dynarmic::A32::DisassembleThumb16(instruction));
         } else {
-            fmt::print("{:08x} ", instruction);
+            fmt::print("{:08x} {}", instruction, Dynarmic::A32::DisassembleArm(instruction));
         }
     }
     fmt::print("\n");
