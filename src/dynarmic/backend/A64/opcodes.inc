@@ -20,6 +20,8 @@ A32OPC(SetExtendedRegister64,                               Void,           A32E
 A32OPC(GetCpsr,                                             U32,                                                                            )
 A32OPC(SetCpsr,                                             Void,           U32                                                             )
 A32OPC(SetCpsrNZCV,                                         Void,           NZCV                                                            )
+A32OPC(SetCpsrNZ,                                           Void,           NZCV                                                            )
+A32OPC(SetCpsrNZC,                                          Void,           NZCV,           U1                                              )
 A32OPC(SetCpsrNZCVRaw,                                      Void,           U32                                                             )
 A32OPC(SetCpsrNZCVQ,                                        Void,           U32                                                             )
 A32OPC(GetCFlag,                                            U1,                                                                             )
@@ -86,9 +88,10 @@ OPCODE(GetCarryFromOp,                                      U1,             Opaq
 OPCODE(GetOverflowFromOp,                                   U1,             Opaque                                                          )
 OPCODE(GetGEFromOp,                                         U32,            Opaque                                                          )
 OPCODE(GetNZCVFromOp,                                       NZCV,           Opaque                                                          )
+OPCODE(GetNZFromOp,                                         NZCV,           Opaque                                                          )
 OPCODE(GetUpperFromOp,                                      U128,           Opaque                                                          )
 OPCODE(GetLowerFromOp,                                      U128,           Opaque                                                          )
-
+OPCODE(GetCFlagFromNZCV,                                    U1,             NZCV                                                            )
 OPCODE(NZCVFromPackedFlags,                                 NZCV,           U32                                                             )
 
 // Calculations

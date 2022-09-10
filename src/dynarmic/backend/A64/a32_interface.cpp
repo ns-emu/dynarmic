@@ -151,7 +151,7 @@ private:
         IR::Block ir_block = A32::Translate(A32::LocationDescriptor{descriptor}, config.callbacks, {config.arch_version, config.define_unpredictable_behaviour, config.hook_hint_instructions});
         Optimization::PolyfillPass(ir_block, polyfill_options);
         if (config.HasOptimization(OptimizationFlag::GetSetElimination)) {
-            Optimization::A32GetSetElimination(ir_block);
+            Optimization::A32GetSetElimination(ir_block, {.convert_nz_to_nzc = true});
             Optimization::DeadCodeElimination(ir_block);
         }
         if (config.HasOptimization(OptimizationFlag::ConstProp)) {

@@ -116,14 +116,78 @@ void EmitA64::EmitGetLowerFromOp(EmitContext&, IR::Inst*) {
     ASSERT_FALSE("should never happen");
 }
 
+void EmitA64::EmitGetNZFromOp(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    const auto sign_extend = [&](ARM64Reg value) {
+        switch (args[0].GetType()) {
+        case IR::Type::U8:
+            code.SXTB(Arm64Gen::EncodeRegTo64(value), Arm64Gen::EncodeRegTo32(value));
+            break;
+        case IR::Type::U16:
+            code.SXTH(Arm64Gen::EncodeRegTo64(value), Arm64Gen::EncodeRegTo32(value));
+            break;
+        case IR::Type::U32:
+            code.SXTW(Arm64Gen::EncodeRegTo64(value), Arm64Gen::EncodeRegTo32(value));
+            break;
+        case IR::Type::U64:
+            break;
+        default:
+            UNREACHABLE();
+        }
+    };
+
+    const Arm64Gen::ARM64Reg nz = ctx.reg_alloc.ScratchGpr();
+    const Arm64Gen::ARM64Reg value = ctx.reg_alloc.UseGpr(args[0]);
+    sign_extend(value);
+    code.CMP(value, ZR);
+    code.MRS(nz, FIELD_NZCV);
+    code.ANDI2R(nz, nz, 0xC0000000);
+    ctx.reg_alloc.DefineValue(inst, nz);
+}
+
 void EmitA64::EmitGetNZCVFromOp(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
+    const auto sign_extend = [&](ARM64Reg value) {
+        switch (args[0].GetType()) {
+        case IR::Type::U8:
+            code.SXTB(Arm64Gen::EncodeRegTo64(value), Arm64Gen::EncodeRegTo32(value));
+            break;
+        case IR::Type::U16:
+            code.SXTH(Arm64Gen::EncodeRegTo64(value), Arm64Gen::EncodeRegTo32(value));
+            break;
+        case IR::Type::U32:
+            code.SXTW(Arm64Gen::EncodeRegTo64(value), Arm64Gen::EncodeRegTo32(value));
+            break;
+        case IR::Type::U64:
+            return;
+        default:
+            UNREACHABLE();
+        }
+    };
+
     Arm64Gen::ARM64Reg nzcv = ctx.reg_alloc.ScratchGpr();
     Arm64Gen::ARM64Reg value = ctx.reg_alloc.UseGpr(args[0]);
+    sign_extend(value);
     code.CMP(value, ZR);
     code.MRS(nzcv, FIELD_NZCV);
     ctx.reg_alloc.DefineValue(inst, nzcv);
+}
+
+void EmitA64::EmitGetCFlagFromNZCV(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    if (args[0].IsImmediate()) {
+        const ARM64Reg result = EncodeRegTo32(ctx.reg_alloc.ScratchGpr());
+        const u32 value = (args[0].GetImmediateU32() >> 29) & 1;
+        code.MOVI2R(result, value);
+        ctx.reg_alloc.DefineValue(inst, result);
+    } else {
+        const ARM64Reg result = EncodeRegTo32(ctx.reg_alloc.UseScratchGpr(args[0]));
+        code.UBFX(result, result, 29, 1);
+        ctx.reg_alloc.DefineValue(inst, result);
+    }
 }
 
 void EmitA64::EmitNZCVFromPackedFlags(EmitContext& ctx, IR::Inst* inst) {

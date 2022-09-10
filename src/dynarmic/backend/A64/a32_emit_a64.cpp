@@ -504,7 +504,49 @@ void A32EmitA64::EmitA32SetCpsrNZCVQ(A32EmitContext& ctx, IR::Inst* inst) {
     code._MSR(FIELD_FPSR, host_fpsr);
 }
 
+void A32EmitA64::EmitA32SetCpsrNZ(A32EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
+    const ARM64Reg nz = EncodeRegTo32(ctx.reg_alloc.UseGpr(args[0]));
+    const ARM64Reg nzcv = EncodeRegTo32(ctx.reg_alloc.ScratchGpr());
+
+    code.LDR(INDEX_UNSIGNED, nzcv, X28, offsetof(A32JitState, cpsr_nzcv));
+    code.ANDI2R(nzcv, nzcv, 0x3000'0000);
+    code.ORR(nzcv, nzcv, nz);
+    code.STR(INDEX_UNSIGNED, nzcv, X28, offsetof(A32JitState, cpsr_nzcv));
+}
+
+void A32EmitA64::EmitA32SetCpsrNZC(A32EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    const ARM64Reg nzcv = EncodeRegTo32(ctx.reg_alloc.ScratchGpr());
+    code.LDR(INDEX_UNSIGNED, nzcv, X28, offsetof(A32JitState, cpsr_nzcv));
+    code.ANDI2R(nzcv, nzcv, 0x1000'0000);
+    if (args[0].IsImmediate()) {
+        if (args[1].IsImmediate()) {
+            const u32 c = (args[1].GetImmediateU32() << 29);
+            if (c) {
+                code.ORRI2R(nzcv, nzcv, c);
+            }
+        } else {
+            const ARM64Reg c = EncodeRegTo32(ctx.reg_alloc.UseGpr(args[1]));
+            code.ORR(nzcv, nzcv, c, {nzcv, ST_LSL, 29});
+        }
+    } else {
+        const ARM64Reg nz = EncodeRegTo32(ctx.reg_alloc.UseScratchGpr(args[0]));
+        if (args[1].IsImmediate()) {
+            const u32 c = args[1].GetImmediateU32() << 29;
+            code.ORR(nzcv, nzcv, nz);
+            if (c) {
+                code.ORRI2R(nzcv, nzcv, c);
+            }
+        } else {
+            const ARM64Reg c = EncodeRegTo32(ctx.reg_alloc.UseGpr(args[1]));
+            code.ORR(nzcv, nzcv, nz);
+            code.ORR(nzcv, nzcv, c, {nzcv, ST_LSL, 29});
+        }
+    }
+    code.STR(INDEX_UNSIGNED, nzcv, X28, offsetof(A32JitState, cpsr_nzcv));
+}
 
 void A32EmitA64::EmitA32SetCheckBit(A32EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
@@ -1409,8 +1451,8 @@ void A32EmitA64::EmitTerminalImpl(IR::Term::LinkBlock terminal, IR::LocationDesc
     PushRSBHelper(X1, X2, terminal.next);
     code.ForceReturnFromRunCode();
 
-    //Todo: find a better/generic place to FlushIcache when switching between
-    //      far code and near code
+    // Todo: find a better/generic place to FlushIcache when switching between
+    //       far code and near code
     code.FlushIcache();
     code.SwitchToNearCode();
 }
@@ -1551,7 +1593,9 @@ void A32EmitA64::Unpatch(const IR::LocationDescriptor& location) {
     EmitA64::Unpatch(location);
     if (config.HasOptimization(OptimizationFlag::FastDispatch)) {
         code.DisableWriting();
-        SCOPE_EXIT { code.EnableWriting(); };
+        SCOPE_EXIT {
+            code.EnableWriting();
+        };
 
         (*fast_dispatch_table_lookup)(location.Value()) = {};
     }
