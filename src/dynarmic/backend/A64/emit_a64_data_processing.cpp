@@ -911,6 +911,15 @@ void EmitA64::EmitAnd64(EmitContext& ctx, IR::Inst* inst) {
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
+void EmitA64::EmitAndNot32(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    Arm64Gen::ARM64Reg op_a = EncodeRegTo32(ctx.reg_alloc.UseGpr(args[0]));
+    Arm64Gen::ARM64Reg result = EncodeRegTo32(ctx.reg_alloc.UseScratchGpr(args[1]));
+    code.BIC(result, op_a, result);
+    ctx.reg_alloc.DefineValue(inst, result);
+}
+
 void EmitA64::EmitEor32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
