@@ -504,47 +504,7 @@ void A32EmitA64::EmitA32SetCpsrNZCVQ(A32EmitContext& ctx, IR::Inst* inst) {
     code._MSR(FIELD_FPSR, host_fpsr);
 }
 
-void A32EmitA64::EmitA32SetNFlag(A32EmitContext& ctx, IR::Inst* inst) {
-    constexpr size_t flag_bit = 31;
-    constexpr u32 flag_mask = 1u << flag_bit;
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Arm64Gen::ARM64Reg nzcv = DecodeReg(ctx.reg_alloc.ScratchGpr());
 
-    code.LDR(INDEX_UNSIGNED, nzcv, X28, offsetof(A32JitState, cpsr_nzcv));
-    if (args[0].IsImmediate()) {
-        if (args[0].GetImmediateU1()) {
-            code.ORRI2R(nzcv, nzcv, flag_mask);
-        } else {
-            code.ANDI2R(nzcv, nzcv, ~flag_mask);
-        }
-    } else {
-        Arm64Gen::ARM64Reg to_store = DecodeReg(ctx.reg_alloc.UseGpr(args[0]));
-
-        code.BFI(nzcv, to_store, flag_bit, 1);
-    }
-    code.STR(INDEX_UNSIGNED, nzcv, X28, offsetof(A32JitState, cpsr_nzcv));
-}
-
-void A32EmitA64::EmitA32SetZFlag(A32EmitContext& ctx, IR::Inst* inst) {
-    constexpr size_t flag_bit = 30;
-    constexpr u32 flag_mask = 1u << flag_bit;
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Arm64Gen::ARM64Reg nzcv = DecodeReg(ctx.reg_alloc.ScratchGpr());
-
-    code.LDR(INDEX_UNSIGNED, nzcv, X28, offsetof(A32JitState, cpsr_nzcv));
-    if (args[0].IsImmediate()) {
-        if (args[0].GetImmediateU1()) {
-            code.ORRI2R(nzcv, nzcv, flag_mask);
-        } else {
-            code.ANDI2R(nzcv, nzcv, ~flag_mask);
-        }
-    } else {
-        Arm64Gen::ARM64Reg to_store = DecodeReg(ctx.reg_alloc.UseScratchGpr(args[0]));
-
-        code.BFI(nzcv, to_store, flag_bit, 1);
-    }
-    code.STR(INDEX_UNSIGNED, nzcv, X28, offsetof(A32JitState, cpsr_nzcv));
-}
 
 void A32EmitA64::EmitA32SetCheckBit(A32EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
@@ -557,47 +517,6 @@ void A32EmitA64::EmitA32GetCFlag(A32EmitContext& ctx, IR::Inst* inst) {
     code.LDR(INDEX_UNSIGNED, result, X28, offsetof(A32JitState, cpsr_nzcv));
     code.UBFX(result, result, 29, 1);
     ctx.reg_alloc.DefineValue(inst, result);
-}
-
-void A32EmitA64::EmitA32SetCFlag(A32EmitContext& ctx, IR::Inst* inst) {
-    constexpr size_t flag_bit = 29;
-    constexpr u32 flag_mask = 1u << flag_bit;
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Arm64Gen::ARM64Reg nzcv = DecodeReg(ctx.reg_alloc.ScratchGpr());
-
-    code.LDR(INDEX_UNSIGNED, nzcv, X28, offsetof(A32JitState, cpsr_nzcv));
-    if (args[0].IsImmediate()) {
-        if (args[0].GetImmediateU1()) {
-            code.ORRI2R(nzcv, nzcv, flag_mask);
-        } else {
-            code.ANDI2R(nzcv, nzcv, ~flag_mask);
-        }
-    } else {
-        Arm64Gen::ARM64Reg to_store = DecodeReg(ctx.reg_alloc.UseScratchGpr(args[0]));
-        code.BFI(nzcv, to_store, flag_bit, 1);
-    }
-    code.STR(INDEX_UNSIGNED, nzcv, X28, offsetof(A32JitState, cpsr_nzcv));
-}
-
-void A32EmitA64::EmitA32SetVFlag(A32EmitContext& ctx, IR::Inst* inst) {
-    constexpr size_t flag_bit = 28;
-    constexpr u32 flag_mask = 1u << flag_bit;
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Arm64Gen::ARM64Reg nzcv = DecodeReg(ctx.reg_alloc.ScratchGpr());
-
-    code.LDR(INDEX_UNSIGNED, nzcv, X28, offsetof(A32JitState, cpsr_nzcv));
-    if (args[0].IsImmediate()) {
-        if (args[0].GetImmediateU1()) {
-            code.ORRI2R(nzcv, nzcv, flag_mask);
-        } else {
-            code.ANDI2R(nzcv, nzcv, ~flag_mask);
-        }
-    } else {
-        Arm64Gen::ARM64Reg to_store = DecodeReg(ctx.reg_alloc.UseGpr(args[0]));
-
-        code.BFI(nzcv, to_store, flag_bit, 1);
-    }
-    code.STR(INDEX_UNSIGNED, nzcv, X28, offsetof(A32JitState, cpsr_nzcv));
 }
 
 void A32EmitA64::EmitA32OrQFlag(A32EmitContext& ctx, IR::Inst* inst) {
