@@ -16,6 +16,7 @@
 #include "dynarmic/backend/A64/constant_pool.h"
 #include "dynarmic/backend/A64/emitter/a64_emitter.h"
 #include "dynarmic/backend/A64/jitstate_info.h"
+#include "dynarmic/common/cast_util.h"
 #include "dynarmic/interface/halt_reason.h"
 
 namespace Dynarmic::BackendA64 {
@@ -65,6 +66,12 @@ public:
     /// Code emitter: Performs a block lookup based on current state
     /// @note this clobbers ABI caller-save registers
     void LookupBlock();
+
+    /// Code emitter: Calls the lambda. Lambda must not have any captures.
+    template<typename Lambda>
+    void CallLambda(Lambda l) {
+        QuickCallFunction(Common::FptrCast(l));
+    }
 
     u64 MConst(u64 lower, u64 upper = 0);
 
