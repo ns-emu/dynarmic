@@ -1,7 +1,6 @@
 /* This file is part of the dynarmic project.
  * Copyright (c) 2016 MerryMage
- * This software may be used and distributed according to the terms of the GNU
- * General Public License version 2 or any later version.
+ * SPDX-License-Identifier: 0BSD
  */
 
 #include "dynarmic/backend/A64/reg_alloc.h"
@@ -16,23 +15,6 @@
 #include "dynarmic/backend/A64/abi.h"
 
 namespace Dynarmic::BackendA64 {
-
-static u64 ImmediateToU64(const IR::Value& imm) {
-    switch (imm.GetType()) {
-    case IR::Type::U1:
-        return u64(imm.GetU1());
-    case IR::Type::U8:
-        return u64(imm.GetU8());
-    case IR::Type::U16:
-        return u64(imm.GetU16());
-    case IR::Type::U32:
-        return u64(imm.GetU32());
-    case IR::Type::U64:
-        return u64(imm.GetU64());
-    default:
-        ASSERT_FALSE("This should never happen.");
-    }
-}
 
 static bool CanExchange(HostLoc a, HostLoc b) {
     return HostLocIsGPR(a) && HostLocIsGPR(b);
@@ -51,10 +33,8 @@ static size_t GetBitWidth(IR::Type type) {
     case IR::Type::Table:
     case IR::Type::AccType:
         ASSERT_FALSE("Type {} cannot be represented at runtime", type);
-        return 0;
     case IR::Type::Opaque:
         ASSERT_FALSE("Not a concrete type");
-        return 0;
     case IR::Type::U1:
         return 8;
     case IR::Type::U8:
@@ -71,7 +51,6 @@ static size_t GetBitWidth(IR::Type type) {
         return 32;  // TODO: Update to 16 when flags optimization is done
     }
     UNREACHABLE();
-    return 0;
 }
 
 static bool IsValuelessType(IR::Type type) {
@@ -171,14 +150,14 @@ bool Argument::IsVoid() const {
 bool Argument::FitsInImmediateU32() const {
     if (!IsImmediate())
         return false;
-    u64 imm = ImmediateToU64(value);
+    const u64 imm = value.GetImmediateAsU64();
     return imm < 0x100000000;
 }
 
 bool Argument::FitsInImmediateS32() const {
     if (!IsImmediate())
         return false;
-    s64 imm = static_cast<s64>(ImmediateToU64(value));
+    const s64 imm = static_cast<s64>(value.GetImmediateAsU64());
     return -s64(0x80000000) <= imm && imm <= s64(0x7FFFFFFF);
 }
 
@@ -187,36 +166,40 @@ bool Argument::GetImmediateU1() const {
 }
 
 u8 Argument::GetImmediateU8() const {
-    u64 imm = ImmediateToU64(value);
+    const u64 imm = value.GetImmediateAsU64();
     ASSERT(imm < 0x100);
     return u8(imm);
 }
 
 u16 Argument::GetImmediateU16() const {
-    u64 imm = ImmediateToU64(value);
+    const u64 imm = value.GetImmediateAsU64();
     ASSERT(imm < 0x10000);
     return u16(imm);
 }
 
 u32 Argument::GetImmediateU32() const {
-    u64 imm = ImmediateToU64(value);
+    const u64 imm = value.GetImmediateAsU64();
     ASSERT(imm < 0x100000000);
     return u32(imm);
 }
 
 u64 Argument::GetImmediateS32() const {
     ASSERT(FitsInImmediateS32());
-    u64 imm = ImmediateToU64(value);
-    return imm;
+    return value.GetImmediateAsU64();
 }
 
 u64 Argument::GetImmediateU64() const {
-    return ImmediateToU64(value);
+    return value.GetImmediateAsU64();
 }
 
 IR::Cond Argument::GetImmediateCond() const {
     ASSERT(IsImmediate() && GetType() == IR::Type::Cond);
     return value.GetCond();
+}
+
+IR::AccType Argument::GetImmediateAccType() const {
+    ASSERT(IsImmediate() && GetType() == IR::Type::AccType);
+    return value.GetAccType();
 }
 
 bool Argument::IsInGpr() const {
@@ -240,7 +223,7 @@ bool Argument::IsInMemory() const {
 RegAlloc::ArgumentInfo RegAlloc::GetArgumentInfo(IR::Inst* inst) {
     ArgumentInfo ret = {Argument{*this}, Argument{*this}, Argument{*this}, Argument{*this}};
     for (size_t i = 0; i < inst->NumArgs(); i++) {
-        const IR::Value& arg = inst->GetArg(i);
+        const IR::Value arg = inst->GetArg(i);
         ret[i].value = arg;
         if (!arg.IsImmediate() && !IsValuelessType(arg.GetType())) {
             ASSERT_MSG(ValueLocation(arg.GetInst()), "argument must already been defined");
@@ -374,7 +357,7 @@ HostLoc RegAlloc::UseScratchImpl(IR::Value use_value, HostLocList desired_locati
 }
 
 HostLoc RegAlloc::ScratchImpl(HostLocList desired_locations) {
-    HostLoc location = SelectARegister(desired_locations);
+    const HostLoc location = SelectARegister(desired_locations);
     MoveOutOfTheWay(location);
     LocInfo(location).WriteLock();
     return location;
@@ -447,9 +430,11 @@ HostLoc RegAlloc::SelectARegister(HostLocList desired_locations) const {
 }
 
 std::optional<HostLoc> RegAlloc::ValueLocation(const IR::Inst* value) const {
-    for (size_t i = 0; i < hostloc_info.size(); i++)
-        if (hostloc_info[i].ContainsValue(value))
+    for (size_t i = 0; i < hostloc_info.size(); i++) {
+        if (hostloc_info[i].ContainsValue(value)) {
             return static_cast<HostLoc>(i);
+        }
+    }
 
     return std::nullopt;
 }
@@ -470,7 +455,7 @@ void RegAlloc::DefineValueImpl(IR::Inst* def_inst, const IR::Value& use_inst) {
     }
 
     ASSERT_MSG(ValueLocation(use_inst.GetInst()), "use_inst must already be defined");
-    HostLoc location = *ValueLocation(use_inst.GetInst());
+    const HostLoc location = *ValueLocation(use_inst.GetInst());
     DefineValueImpl(def_inst, location);
 }
 
@@ -479,14 +464,14 @@ HostLoc RegAlloc::LoadImmediate(IR::Value imm, HostLoc host_loc) {
 
     if (HostLocIsGPR(host_loc)) {
         Arm64Gen::ARM64Reg reg = HostLocToReg64(host_loc);
-        u64 imm_value = ImmediateToU64(imm);
+        u64 imm_value = imm.GetImmediateAsU64();
         code.MOVI2R(reg, imm_value);
         return host_loc;
     }
 
     if (HostLocIsFPR(host_loc)) {
         Arm64Gen::ARM64Reg reg = Arm64Gen::EncodeRegToDouble(HostLocToFpr(host_loc));
-        u64 imm_value = ImmediateToU64(imm);
+        u64 imm_value = imm.GetImmediateAsU64();
         if (imm_value == 0)
             code.fp_emitter.FMOV(reg, 0);
         else {
@@ -551,15 +536,16 @@ void RegAlloc::SpillRegister(HostLoc loc) {
     ASSERT_MSG(!LocInfo(loc).IsEmpty(), "There is no need to spill unoccupied registers");
     ASSERT_MSG(!LocInfo(loc).IsLocked(), "Registers that have been allocated must not be spilt");
 
-    HostLoc new_loc = FindFreeSpill();
+    const HostLoc new_loc = FindFreeSpill();
     Move(new_loc, loc);
 }
 
 HostLoc RegAlloc::FindFreeSpill() const {
     for (size_t i = static_cast<size_t>(HostLoc::FirstSpill); i < hostloc_info.size(); i++) {
-        HostLoc loc = static_cast<HostLoc>(i);
-        if (LocInfo(loc).IsEmpty())
+        const auto loc = static_cast<HostLoc>(i);
+        if (LocInfo(loc).IsEmpty()) {
             return loc;
+        }
     }
 
     ASSERT_FALSE("All spill locations are full");

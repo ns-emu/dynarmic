@@ -74,6 +74,7 @@ public:
     u64 GetImmediateS32() const;
     u64 GetImmediateU64() const;
     IR::Cond GetImmediateCond() const;
+    IR::AccType GetImmediateAccType() const;
 
     /// Is this value currently in a GPR?
     bool IsInGpr() const;
