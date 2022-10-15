@@ -175,7 +175,7 @@ void BlockOfCode::GenRunCode() {
     STR(Arm64Gen::INDEX_UNSIGNED, ABI_RETURN, Arm64Gen::X28, jsi.offsetof_cycles_to_run);
     MOV(Arm64Gen::X26, ABI_RETURN);
 
-    LDR(Arm64Gen::INDEX_UNSIGNED, ABI_SCRATCH1, Arm64Gen::X28, jsi.offsetof_halt_reason);
+    LDR(Arm64Gen::INDEX_UNSIGNED, DecodeReg(ABI_SCRATCH1), Arm64Gen::X28, jsi.offsetof_halt_reason);
     return_to_caller_fpscr_already_exited.push_back(CBNZ(ABI_SCRATCH1));
 
     SwitchFpscrOnEntry();
