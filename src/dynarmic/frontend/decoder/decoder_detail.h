@@ -73,7 +73,11 @@ struct detail {
      * An argument is specified by a continuous string of the same character.
      */
     template<size_t N>
+#ifdef __clang__
+    static constexpr auto GetArgInfo(std::array<char, opcode_bitsize> bitstring) {
+#else
     static consteval auto GetArgInfo(std::array<char, opcode_bitsize> bitstring) {
+#endif
         std::array<opcode_type, N> masks = {};
         std::array<size_t, N> shifts = {};
         size_t arg_index = 0;
@@ -174,8 +178,8 @@ struct detail {
 
         constexpr auto mask = std::get<0>(GetMaskAndExpect(bitstring));
         constexpr auto expect = std::get<1>(GetMaskAndExpect(bitstring));
-        constexpr auto arg_masks = std::get<0>(GetArgInfo<args_count>(bitstring));
-        constexpr auto arg_shifts = std::get<1>(GetArgInfo<args_count>(bitstring));
+        const auto arg_masks = std::get<0>(GetArgInfo<args_count>(bitstring));
+        const auto arg_shifts = std::get<1>(GetArgInfo<args_count>(bitstring));
 
         using Iota = std::make_index_sequence<args_count>;
 
