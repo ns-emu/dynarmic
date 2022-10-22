@@ -23,7 +23,7 @@ void EmitSpinLockLock(ARM64CodeBlock& code, ARM64Reg ptr, ARM64Reg tmp1, ARM64Re
     // Adapted from arm reference manual impl
     code.MOVI2R(tmp1_32, 1);
     code.HINT(BackendA64::Arm64Gen::HINT_SEVL);
-    start0 = code.B();
+    start = code.B();
     loop = code.GetCodePtr();
     code.HINT(BackendA64::Arm64Gen::HINT_WFE);
     code.SetJumpTarget(start);
@@ -33,7 +33,7 @@ void EmitSpinLockLock(ARM64CodeBlock& code, ARM64Reg ptr, ARM64Reg tmp1, ARM64Re
     code.CBNZ(tmp2_32, loop);
 }
 
-void EmitSpinLockUnlock(ARM64CodeBlock& code, ARM64Reg ptr, ARM64Reg tmp) {
+void EmitSpinLockUnlock(ARM64CodeBlock& code, ARM64Reg ptr) {
     code.STLR(ARM64Reg::WZR, ptr);
 }
 
@@ -59,7 +59,7 @@ SpinLockImpl::SpinLockImpl() {
 
     code.AlignCode16();
     unlock = reinterpret_cast<void (*)(volatile int*)>(code.GetWritableCodePtr());
-    EmitSpinLockUnlock(code, ABI_PARAM1, ARM64Reg::W8);
+    EmitSpinLockUnlock(code, ABI_PARAM1);
     code.RET();
     code.FlushIcache();
 }
