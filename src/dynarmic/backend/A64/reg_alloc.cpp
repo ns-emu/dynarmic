@@ -473,7 +473,7 @@ HostLoc RegAlloc::LoadImmediate(IR::Value imm, HostLoc host_loc) {
         Arm64Gen::ARM64Reg reg = Arm64Gen::EncodeRegToDouble(HostLocToFpr(host_loc));
         u64 imm_value = imm.GetImmediateAsU64();
         if (imm_value == 0)
-            code.fp_emitter.FMOV(reg, 0);
+            code.fp_emitter.MOVI(64, reg, 0);
         else {
             code.EmitPatchLDR(reg, imm_value);
         }
