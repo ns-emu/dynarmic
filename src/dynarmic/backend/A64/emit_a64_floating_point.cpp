@@ -183,13 +183,21 @@ static ARM64Reg SetFpscrNzcvFromFlags(BlockOfCode& code, EmitContext& ctx) {
 void EmitA64::EmitFPCompare32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     ARM64Reg reg_a = EncodeRegToSingle(ctx.reg_alloc.UseFpr(args[0]));
-    ARM64Reg reg_b = EncodeRegToSingle(ctx.reg_alloc.UseFpr(args[1]));
     bool exc_on_qnan = args[2].GetImmediateU1();
 
-    if (exc_on_qnan) {
-        code.fp_emitter.FCMPE(reg_a, reg_b);
+    if (args[1].IsImmediate() && args[1].GetImmediateU64() == 0) {
+         if (exc_on_qnan) {
+            code.fp_emitter.FCMPE(reg_a);
+        } else {
+            code.fp_emitter.FCMP(reg_a);
+        }
     } else {
-        code.fp_emitter.FCMP(reg_a, reg_b);
+        ARM64Reg reg_b = EncodeRegToSingle(ctx.reg_alloc.UseFpr(args[1]));
+        if (exc_on_qnan) {
+            code.fp_emitter.FCMPE(reg_a, reg_b);
+        } else {
+            code.fp_emitter.FCMP(reg_a, reg_b);
+        }
     }
 
     ARM64Reg nzcv = SetFpscrNzcvFromFlags(code, ctx);
@@ -199,13 +207,21 @@ void EmitA64::EmitFPCompare32(EmitContext& ctx, IR::Inst* inst) {
 void EmitA64::EmitFPCompare64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const ARM64Reg reg_a = EncodeRegToDouble(ctx.reg_alloc.UseFpr(args[0]));
-    const ARM64Reg reg_b = EncodeRegToDouble(ctx.reg_alloc.UseFpr(args[1]));
     bool exc_on_qnan = args[2].GetImmediateU1();
 
-    if (exc_on_qnan) {
-        code.fp_emitter.FCMPE(reg_a, reg_b);
+    if (args[1].IsImmediate() && args[1].GetImmediateU64() == 0) {
+        if (exc_on_qnan) {
+            code.fp_emitter.FCMPE(reg_a);
+        } else {
+            code.fp_emitter.FCMP(reg_a);
+        }
     } else {
-        code.fp_emitter.FCMP(reg_a, reg_b);
+        const ARM64Reg reg_b = EncodeRegToDouble(ctx.reg_alloc.UseFpr(args[1]));
+        if (exc_on_qnan) {
+            code.fp_emitter.FCMPE(reg_a, reg_b);
+        } else {
+            code.fp_emitter.FCMP(reg_a, reg_b);
+        }
     }
 
     ARM64Reg nzcv = SetFpscrNzcvFromFlags(code, ctx);
