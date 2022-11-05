@@ -186,7 +186,7 @@ void EmitA64::EmitFPCompare32(EmitContext& ctx, IR::Inst* inst) {
     bool exc_on_qnan = args[2].GetImmediateU1();
 
     if (args[1].IsImmediate() && args[1].GetImmediateU64() == 0) {
-         if (exc_on_qnan) {
+        if (exc_on_qnan) {
             code.fp_emitter.FCMPE(reg_a);
         } else {
             code.fp_emitter.FCMP(reg_a);
