@@ -51,6 +51,7 @@ SpinLockImpl impl;
 
 SpinLockImpl::SpinLockImpl() {
     code.AllocCodeSpace(64);
+    code.EnableWriting();
     const ARM64Reg ABI_PARAM1 = BackendA64::HostLocToReg64(BackendA64::ABI_PARAM1);
     code.AlignCode16();
     lock = reinterpret_cast<void (*)(volatile int*)>(code.GetWritableCodePtr());
@@ -61,6 +62,7 @@ SpinLockImpl::SpinLockImpl() {
     unlock = reinterpret_cast<void (*)(volatile int*)>(code.GetWritableCodePtr());
     EmitSpinLockUnlock(code, ABI_PARAM1);
     code.RET();
+    code.DisableWriting();
     code.FlushIcache();
 }
 

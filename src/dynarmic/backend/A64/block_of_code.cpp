@@ -17,16 +17,6 @@
 #include "dynarmic/backend/A64/perf_map.h"
 #include "dynarmic/interface/halt_reason.h"
 
-#ifdef _WIN32
-#    include <windows.h>
-#else
-#    include <sys/mman.h>
-#endif
-
-#ifdef __APPLE__
-#    include <pthread.h>
-#endif
-
 namespace Dynarmic::BackendA64 {
 
 const Arm64Gen::ARM64Reg BlockOfCode::ABI_RETURN = Arm64Gen::ARM64Reg::X0;
@@ -53,23 +43,6 @@ namespace {
 constexpr size_t TOTAL_CODE_SIZE = 128 * 1024 * 1024;
 constexpr size_t FAR_CODE_OFFSET = 100 * 1024 * 1024;
 
-#ifdef DYNARMIC_ENABLE_NO_EXECUTE_SUPPORT
-void ProtectMemory([[maybe_unused]] const void* base, [[maybe_unused]] size_t size, bool is_executable) {
-#    if defined(_WIN32)
-    DWORD oldProtect = 0;
-    VirtualProtect(const_cast<void*>(base), size, is_executable ? PAGE_EXECUTE_READ : PAGE_READWRITE, &oldProtect);
-#    elif defined(__APPLE__)
-    pthread_jit_write_protect_np(is_executable);
-#    else
-    static const size_t pageSize = sysconf(_SC_PAGESIZE);
-    const size_t iaddr = reinterpret_cast<size_t>(base);
-    const size_t roundAddr = iaddr & ~(pageSize - static_cast<size_t>(1));
-    const int mode = is_executable ? (PROT_READ | PROT_EXEC) : (PROT_READ | PROT_WRITE);
-    mprotect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), mode);
-#    endif
-}
-#endif
-
 }  // anonymous namespace
 
 BlockOfCode::BlockOfCode(RunCodeCallbacks cb, JitStateInfo jsi)
@@ -89,18 +62,6 @@ void BlockOfCode::PreludeComplete() {
     FlushIcache();
     ClearCache();
     DisableWriting();
-}
-
-void BlockOfCode::EnableWriting() {
-#ifdef DYNARMIC_ENABLE_NO_EXECUTE_SUPPORT
-    ProtectMemory(GetCodePtr(), TOTAL_CODE_SIZE, false);
-#endif
-}
-
-void BlockOfCode::DisableWriting() {
-#ifdef DYNARMIC_ENABLE_NO_EXECUTE_SUPPORT
-    ProtectMemory(GetCodePtr(), TOTAL_CODE_SIZE, true);
-#endif
 }
 
 void BlockOfCode::ClearCache() {

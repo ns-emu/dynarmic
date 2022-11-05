@@ -13,6 +13,10 @@
 #    include <sys/mman.h>
 #endif
 
+#ifdef __APPLE__
+#    include <pthread.h>
+#endif
+
 #include <mcl/assert.hpp>
 #include <mcl/stdint.hpp>
 
@@ -28,6 +32,23 @@ private:
     // invalid. For debugging usefulness it should be used to set the RAM to a
     // host specific breakpoint instruction
     virtual void PoisonMemory() = 0;
+
+#ifdef DYNARMIC_ENABLE_NO_EXECUTE_SUPPORT
+    void ProtectMemory([[maybe_unused]] const void* base, [[maybe_unused]] size_t size, bool is_executable) {
+#    if defined(_WIN32)
+        DWORD oldProtect = 0;
+        VirtualProtect(const_cast<void*>(base), size, is_executable ? PAGE_EXECUTE_READ : PAGE_READWRITE, &oldProtect);
+#    elif defined(__APPLE__)
+        pthread_jit_write_protect_np(is_executable);
+#    else
+        static const size_t pageSize = sysconf(_SC_PAGESIZE);
+        const size_t iaddr = reinterpret_cast<size_t>(base);
+        const size_t roundAddr = iaddr & ~(pageSize - static_cast<size_t>(1));
+        const int mode = is_executable ? (PROT_READ | PROT_EXEC) : (PROT_READ | PROT_WRITE);
+        mprotect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), mode);
+#    endif
+    }
+#endif
 
 protected:
     u8* region = nullptr;
@@ -135,6 +156,20 @@ public:
         child->total_region_size = child_size;
         child->ResetCodePtr();
         m_children.emplace_back(child);
+    }
+
+    /// Change permissions to RW. This is required to support systems with W^X enforced.
+    void EnableWriting() {
+#ifdef DYNARMIC_ENABLE_NO_EXECUTE_SUPPORT
+        ProtectMemory(T::GetCodePtr(), total_region_size, false);
+#endif
+    }
+
+    /// Change permissions to RX. This is required to support systems with W^X enforced.
+    void DisableWriting() {
+#ifdef DYNARMIC_ENABLE_NO_EXECUTE_SUPPORT
+        ProtectMemory(T::GetCodePtr(), total_region_size, true);
+#endif
     }
 };
 }  // namespace Dynarmic::BackendA64
