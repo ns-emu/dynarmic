@@ -443,7 +443,7 @@ void EmitA64::EmitPackedSaturatedSubS16(EmitContext& ctx, IR::Inst* inst) {
     ctx.reg_alloc.DefineValue(inst, a);
 }
 
-void EmitA64::EmitPackedAbsDiffSumS8(EmitContext& ctx, IR::Inst* inst) {
+void EmitA64::EmitPackedAbsDiffSumU8(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     const ARM64Reg a = EncodeRegToDouble(ctx.reg_alloc.UseScratchFpr(args[0]));
